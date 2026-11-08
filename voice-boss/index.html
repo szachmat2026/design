@@ -1,13 +1,14 @@
 <!doctype html><html lang="pl"><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<link rel="manifest" href="/manifest.json"><link rel="icon" href="/icon.png">
-<meta name="theme-color" content="#0e1116">
+<link rel="manifest" href="manifest.json"><link rel="icon" href="icon.png">
+<meta name="theme-color" content="#f4f3ec">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <title>KADM Studio</title>
 <style>
 /* Dopasuj do kadm.app: zmień tylko te zmienne */
-:root{--bg:#0e1116;--side:#12161d;--card:#171c25;--line:#262d39;--fg:#e8eaed;--mut:#8b93a1;--acc:#4ade80;--accfg:#06240f;--bad:#f87171;--r:12px;--font:system-ui,-apple-system,"Segoe UI",sans-serif}
-@media(prefers-color-scheme:light){:root:not([data-theme=dark]){--bg:#f6f7f9;--side:#fff;--card:#fff;--line:#e3e6eb;--fg:#15181d;--mut:#5b6472;--accfg:#04200d}}
-:root[data-theme=light]{--bg:#f6f7f9;--side:#fff;--card:#fff;--line:#e3e6eb;--fg:#15181d;--mut:#5b6472;--accfg:#04200d}
+:root{--bg:#f4f3ec;--side:#f7f6ef;--card:#fbfaf6;--line:#dedcd1;--fg:#1a261e;--mut:#6b7168;--acc:#c6f26b;--accfg:#1a261e;--green:#5d8a2b;--btn:#1a261e;--btnfg:#f7f6ef;--sage:#e3e6da;--bad:#c2452d;--r:8px;--font:"Instrument Sans","Segoe UI",system-ui,-apple-system,sans-serif}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#111a14;--side:#151f18;--card:#1a251e;--line:#2a372e;--fg:#ecebe3;--mut:#98a294;--btn:#c6f26b;--btnfg:#1a261e;--sage:#1d2a21;--bad:#ef6a4f}}
+:root[data-theme=dark]{--bg:#111a14;--side:#151f18;--card:#1a251e;--line:#2a372e;--fg:#ecebe3;--mut:#98a294;--btn:#c6f26b;--btnfg:#1a261e;--sage:#1d2a21;--bad:#ef6a4f}
 *{box-sizing:border-box}html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 var(--font);display:flex;overflow:hidden}
 button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:10px;padding:8px 12px}
@@ -16,7 +17,7 @@ button.bad{background:var(--bad);color:#fff;border-color:transparent}
 input,select,textarea{font:inherit;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
 aside{width:272px;background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;flex:none;transition:transform .2s}
 .brand{display:flex;align-items:center;gap:10px;padding:14px 14px 8px;font-weight:700;font-size:17px}
-.brand img{width:26px;height:26px;border-radius:6px}
+.logo{width:34px;height:34px;flex:none}#login .logo{width:56px;margin:0 auto}
 #new{margin:8px 12px}
 #list{flex:1;overflow:auto;padding:4px 8px}
 .ci{padding:9px 10px;border-radius:9px;cursor:pointer;display:flex;gap:8px;align-items:center;color:var(--mut)}
@@ -76,13 +77,48 @@ body{background:radial-gradient(1200px 500px at 70% -10%,color-mix(in srgb,var(-
 .sug button:hover{border-color:var(--acc);transform:translateY(-1px)}button{transition:.15s}
 #in:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 25%,transparent)}
 @media(max-width:760px){#stats .chip:nth-child(n+3){display:none}.hero h2{font-size:22px}}
+
+/* --- v3: styl kadm.studio --- */
+body{background:var(--bg);font-family:var(--font);letter-spacing:-.005em}
+.brand{padding:16px 16px 10px;font-size:22px;font-weight:700;letter-spacing:-.04em}.brand small{font-size:12px;font-weight:400;color:var(--mut);letter-spacing:0;margin-top:6px}
+button{border-radius:6px}button.pri,#send{background:var(--btn);color:var(--btnfg);border-color:transparent;font-weight:500}
+button.pri:hover{opacity:.88}#new{border-radius:6px}
+.top{background:color-mix(in srgb,var(--bg) 88%,transparent)}.top h1{font-weight:600;letter-spacing:-.02em}
+.m{box-shadow:none;border-radius:8px}.m.user{background:var(--btn);color:var(--btnfg);background-image:none}
+.m.assistant{border:1px solid var(--line);background:var(--card)}
+.m pre{background:#1b2a21;color:#ecebe3;border:0}.m code{background:var(--sage)}.m pre code{background:none}
+.chip{border-radius:4px;background:transparent}
+input,select,textarea{border-radius:6px}#in{border-radius:8px}#send{border-radius:6px}
+#mic.on{background:var(--acc);color:var(--accfg);box-shadow:0 0 0 5px color-mix(in srgb,var(--acc) 40%,transparent)}
+@keyframes pulse{to{box-shadow:0 0 0 12px transparent;transform:scale(1.08)}}
+#in:focus{border-color:var(--fg);box-shadow:none}
+.ci.on{background:var(--sage);color:var(--fg)}.ci i{background:var(--green)}
+dialog,#login form{border-radius:10px}#login .logo{display:block}
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:36px;align-items:center;text-align:left;max-width:none;margin:8px 0 0;width:100%}
+.hero h2{font-size:clamp(30px,5vw,54px);line-height:1.02;letter-spacing:-.045em;font-weight:600;margin:.3em 0 .35em}
+.hero p{font-size:16px;color:var(--mut);max-width:46ch}
+.pill{display:inline-flex;align-items:center;gap:8px;color:var(--mut);font-weight:500;font-size:14px}.pill i{width:8px;height:8px;border-radius:50%;background:var(--green)}
+.art{width:100%;max-height:300px;background:var(--sage);border-radius:6px;color:var(--fg)}
+.sug{grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:26px}
+.sug button{border-radius:6px;padding:14px 16px;background:var(--card);border:1px solid var(--line);display:flex;flex-direction:column;gap:3px}
+.sug button em{font:11px ui-monospace,Consolas,monospace;color:var(--mut);font-style:normal;margin-bottom:10px}
+.sug button b{font-size:17px;letter-spacing:-.02em}.sug button:hover{border-color:var(--fg);transform:none}
+.art .k{fill:#1b2a21}@media(prefers-color-scheme:dark){:root:not([data-theme=light]) .art .k{fill:#3a5443}}:root[data-theme=dark] .art .k{fill:#3a5443}
+@media(max-width:760px){.hero{grid-template-columns:1fr;gap:18px}.art{max-height:200px}}
+dialog#pdlg{width:min(760px,96vw);max-height:86vh;padding:0;overflow:hidden}#pdlg[open]{display:flex;flex-direction:column}
+.ph{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 6px}.ph h3{margin:0;letter-spacing:-.02em}
+.tabs{display:flex;gap:4px;padding:0 12px 8px;border-bottom:1px solid var(--line);overflow:auto}.tabs button{border:0;background:none;color:var(--mut);border-radius:6px;white-space:nowrap}.tabs button.on{background:var(--sage);color:var(--fg)}
+#pq{margin:10px 16px 0;width:calc(100% - 32px)}#pbody{overflow:auto;padding:8px 16px;flex:1;min-height:200px}
+.pr{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}.pr .i{flex:1;min-width:0}.pr .i b{display:block;overflow:hidden;text-overflow:ellipsis}.pr .i small{color:var(--mut);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pr button{padding:5px 10px;font-size:13px}.tag{font-size:11px;border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--mut)}.tag.on{background:var(--acc);color:var(--accfg);border-color:transparent}
+#pmsg{padding:8px 16px 12px;color:var(--mut);font-size:12px;white-space:pre-wrap;max-height:90px;overflow:auto}.add{display:flex;gap:8px;margin:10px 0}.add input{flex:1}
 </style>
-<div id="login"><form id="lf"><img src="/icon.png" onerror="this.remove()" alt=""><h2 style="margin:0">KADM Studio</h2>
- <input id="pw" type="password" placeholder="Hasło" autocomplete="current-password" required><button class="pri">Zaloguj</button><div id="err"></div></form></div>
+<div id="login"><form id="lf"><svg class="logo" viewBox="0 0 44 44" aria-hidden="true"><rect width="44" height="44" rx="10" fill="#1b2a21"/><rect x="11" y="9" width="6.5" height="26" rx="1.5" fill="#c6f26b"/><path d="M17.5 24v-6L30 9l4 5zM17.5 23l7-2 10 9.5-4 4.5z" fill="#c6f26b"/></svg><h2 style="margin:0">kadm <small style="font-weight:400;color:var(--mut);font-size:.6em">studio</small></h2>
+ <input id="pw" type="password" placeholder="Hasło" autocomplete="current-password" required><input id="code" inputmode="numeric" maxlength="6" placeholder="Kod z aplikacji (2FA)" autocomplete="one-time-code" hidden><button class="pri">Zaloguj</button><div id="err"></div></form></div>
 <aside id="side">
- <div class="brand"><img src="/icon.png" onerror="this.remove()" alt="">KADM Studio</div>
+ <div class="brand"><svg class="logo" viewBox="0 0 44 44" aria-hidden="true"><rect width="44" height="44" rx="10" fill="#1b2a21"/><rect x="11" y="9" width="6.5" height="26" rx="1.5" fill="#c6f26b"/><path d="M17.5 24v-6L30 9l4 5zM17.5 23l7-2 10 9.5-4 4.5z" fill="#c6f26b"/></svg><span>kadm</span><small>studio</small></div>
  <button id="new" class="pri">+ Nowa rozmowa</button><div id="list"></div>
- <div class="foot"><button id="set" style="flex:1">Ustawienia</button><button id="out" title="Wyloguj">⏻</button></div>
+ <div class="foot"><button id="plg" style="flex:1">Wtyczki</button><button id="set" style="flex:1">Ustawienia</button><button id="out" title="Wyloguj">⏻</button></div>
 </aside>
 <main>
  <div class="top"><button id="burger">☰</button><h1 id="title">KADM Studio</h1><div id="stats"></div><button id="stop" class="bad" hidden>STOP</button></div>
@@ -94,6 +130,9 @@ body{background:radial-gradient(1200px 500px at 70% -10%,color-mix(in srgb,var(-
   <div class="opts"><label><input id="tts" type="checkbox" checked> czytaj odpowiedzi na głos po mowie</label>
   <label>cisza → wyślij <input id="sil" type="number" min="1" max="15" value="4">s</label><span id="st"></span></div></div>
 </main>
+<dialog id="pdlg"><div class="ph"><h3>Wtyczki i MCP</h3><button id="px">✕</button></div>
+ <div class="tabs"><button data-t="inst" class="on">Zainstalowane</button><button data-t="cat">Katalog</button><button data-t="mcp">MCP</button><button data-t="mk">Źródła</button></div>
+ <input id="pq" placeholder="Szukaj w katalogu…" hidden><div id="pbody"></div><div id="pmsg"></div></dialog>
 <dialog id="dlg"><h3 style="margin:0">Ustawienia</h3>
  <label>Katalog roboczy nowych rozmów</label><input id="cwd" placeholder="zostaw puste = domyślny">
  <label>Uprawnienia agenta</label><select id="perm"><option value="acceptEdits">Edycje bez pytania (zalecane)</option><option value="auto">Auto</option><option value="default">Pytaj o wszystko</option><option value="plan">Tylko plan</option></select>
@@ -102,7 +141,7 @@ body{background:radial-gradient(1200px 500px at 70% -10%,color-mix(in srgb,var(-
  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px"><button id="x">Anuluj</button><button id="ok" class="pri">Zapisz</button></div></dialog>
 <script>
 const $=id=>document.getElementById(id);let cur=null,chats=[],busy={},live=false,rec,buf="",timer,lastVoice=false,S={};
-const api=async(p,b,m)=>{const r=await fetch(p,{method:b===undefined?"GET":"POST",headers:{"Content-Type":"application/json"},body:b===undefined?undefined:JSON.stringify(b)});
+const api=async(p,b,m)=>{const r=await fetch(p.replace(/^\//,""),{method:b===undefined?"GET":"POST",headers:{"Content-Type":"application/json"},body:b===undefined?undefined:JSON.stringify(b)});
  if(r.status===401){$("login").style.display="flex";throw 0}return r.json()};
 const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function md(s){const code=[];s=esc(s).replace(/```(?:\w+)?\n?([\s\S]*?)```/g,(_,c)=>{code.push(c);return"\u0000"+(code.length-1)+"\u0000"});
@@ -121,10 +160,11 @@ function setBusy(b){$("stop").hidden=!b;$("st").textContent=b?"szef pracuje…":
 function renderList(){$("list").innerHTML="";chats.forEach(c=>{const d=document.createElement("div");d.className="ci"+(c.id===cur?" on":"");
  d.innerHTML="<span>"+esc(c.title)+"</span>"+(c.busy?"<i></i>":"")+"<b title='Usuń'>✕</b>";
  d.onclick=e=>{if(e.target.tagName==="B"){if(confirm("Usunąć rozmowę?"))api("/api/chats/"+c.id+"/delete",{}).then(()=>{if(cur===c.id)cur=null;load()});return}open(c.id);$("side").classList.remove("open")};$("list").append(d)})}
-async function load(){chats=await api("/api/chats");if(!cur&&chats[0])cur=chats[0].id;renderList();if(cur&&chats.find(c=>c.id===cur))await open(cur,1);else{cur=null;hero();$("title").textContent="KADM Studio"}}
-const SUG=[["Stan komputera","Sprawdź CPU, RAM, dysk i największe procesy"],["Ekran","Zrób zrzut ekranu i powiedz, co widzę"],["Porządki","Znajdź największe pliki w Pobranych"],["Telewizor","Sprawdź połączenie ADB z telewizorem"]];
-function hero(){$("w").innerHTML='<div class="hero"><h2>KADM Studio</h2><p>Napisz lub powiedz, co ma zrobić szef. Działa na Twoim komputerze.</p><div class="sug"></div></div>';
- SUG.forEach(([t,p])=>{const b=document.createElement("button");b.innerHTML="<b>"+t+"</b><small>"+p+"</small>";b.onclick=()=>send(p,false);$("w").querySelector(".sug").append(b)})}
+async function load(){chats=await api("/api/chats");if(!cur&&chats[0])cur=chats[0].id;renderList();if(cur&&chats.find(c=>c.id===cur))await open(cur,1);else{cur=null;hero();$("title").textContent="kadm studio"}}
+const SUG=[["A / 01","Stan komputera","Sprawdź CPU, RAM, dysk i największe procesy"],["B / 02","Ekran","Zrób zrzut ekranu i powiedz, co widzę"],["C / 03","Porządki","Znajdź największe pliki w Pobranych"],["D / 04","Telewizor","Sprawdź połączenie ADB z telewizorem"]];
+const ART=`<svg viewBox="0 0 360 300" class="art" aria-hidden="true"><defs><pattern id="g" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0V30" fill="none" stroke="currentColor" stroke-opacity=".08"/></pattern><filter id="sh" x="-20%" y="-20%" width="150%" height="150%"><feDropShadow dx="6" dy="10" stdDeviation="9" flood-opacity=".22"/></filter></defs><rect width="360" height="300" fill="url(#g)"/><polygon class="k" points="95,92 168,78 168,262 95,276"/><g filter="url(#sh)"><polygon points="168,150 232,70 290,118 226,198" fill="#c6f26b"/><polygon points="170,212 226,166 294,236 234,284" fill="#879a6f"/></g></svg>`;
+function hero(){$("w").innerHTML='<div class="hero"><div><span class="pill"><i></i>Twój agent na komputerze</span><h2>Powiedz, co zrobić.<br>Szef to zrobi.</h2><p>Pisz albo mów. Agent wykonuje komendy, edytuje pliki i steruje ekranem na Twoim komputerze.</p></div>'+ART+'</div><div class="sug"></div>';
+ SUG.forEach(([n,t,p])=>{const b=document.createElement("button");b.innerHTML="<em>"+n+"</em><b>"+t+"</b><small>"+p+"</small>";b.onclick=()=>send(p,false);$("w").querySelector(".sug").append(b)})}
 async function open(id,keep){cur=id;const c=await api("/api/chats/"+id);$("title").textContent=c.title;$("w").innerHTML="";c.messages.length?c.messages.forEach(bubble):hero();setBusy(c.busy);if(c.busy)liveEl().innerHTML='<span class="d">●</span> pracuję…';renderList();down()}
 async function ensure(){if(cur)return;const c=await api("/api/chats",{});cur=c.id;await load()}
 async function send(text,voice){text=text.trim();if(!text)return;await ensure();lastVoice=!!voice;bubble({role:"user",text});setBusy(true);liveEl().innerHTML='<span class="d">●</span> pracuję…';down();
@@ -148,7 +188,7 @@ function mic(){if(!SR){alert("Mikrofon: użyj Chrome/Edge (HTTPS lub localhost).
  rec.start();live=true;$("mic").classList.add("on")}
 $("mic").onclick=mic;
 /* zdarzenia na żywo */
-function sse(){const es=new EventSource("/events");es.onmessage=m=>{const e=JSON.parse(m.data);
+function sse(){const es=new EventSource("events");es.onmessage=m=>{const e=JSON.parse(m.data);
  if(e.type==="chats")api("/api/chats").then(c=>{chats=c;renderList()});
  else if(e.chat===cur){if(e.type==="busy")setBusy(e.busy);
   else if(e.type==="tool")liveEl().innerHTML='<span class="d">●</span> '+esc(e.name+": "+e.text.slice(0,120));
@@ -162,10 +202,34 @@ $("ok").onclick=async()=>{await api("/api/settings",{screen:$("scr").checked,per
  const t=$("theme").value;t?localStorage.setItem("theme",t):localStorage.removeItem("theme");document.documentElement.dataset.theme=t||"";
  $("dlg").close()};
 $("out").onclick=async()=>{await api("/api/logout",{}).catch(()=>{});location.reload()};
-$("lf").onsubmit=async e=>{e.preventDefault();const r=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:$("pw").value})});
+$("lf").onsubmit=async e=>{e.preventDefault();const r=await fetch("api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:$("pw").value,code:$("code").value})});
  if(r.ok){$("login").style.display="none";init()}else $("err").textContent=(await r.json()).error||"Błąd"};
 function chip(l,v,u,w,hot){return v==null?"":'<span class="chip'+(v>=hot?" hot":v>=w?" warm":"")+'">'+l+' <b>'+v+u+'</b></span>'}
 async function stats(){try{const s=await api("/api/stats");$("stats").innerHTML=chip("🌡",s.temp,"°C",70,85)+chip("CPU",s.cpu,"%",70,90)+chip("RAM",s.ram,"%",75,90)+chip("load",s.load,"",1e9,1e9)+(s.procs!=null?'<span class="chip">proc <b>'+s.procs+'</b></span>':"")}catch(_){}}
 setInterval(stats,3000);
+
+/* ---- zarządzanie wtyczkami ---- */
+let ptab="inst",pbusy=false;const pmsg=t=>$("pmsg").textContent=t||"";
+async function pdo(path,body,label){if(pbusy)return;pbusy=true;pmsg((label||"Pracuję")+"… (może potrwać)");try{const r=await api(path,body);pmsg((r.ok?"✓ Gotowe. Zmiany działają w nowych rozmowach.\n":"✗ Błąd.\n")+(r.out||""))}catch(_){pmsg("Błąd połączenia")}pbusy=false;prender()}
+async function prender(){const b=$("pbody");$("pq").hidden=ptab!=="cat";b.innerHTML='<p style="color:var(--mut)">Ładuję…</p>';
+ if(ptab==="inst"||ptab==="cat"){const d=await api("api/plugins?q="+encodeURIComponent(ptab==="cat"?$("pq").value:""));b.innerHTML="";if(d.error)b.textContent=d.error;
+  if(ptab==="inst"){if(!d.installed.length)b.innerHTML='<p style="color:var(--mut)">Brak zainstalowanych wtyczek.</p>';
+   d.installed.forEach(p=>{const r=document.createElement("div");r.className="pr";r.innerHTML='<div class="i"><b>'+esc(p.id)+'</b><small>v'+esc(p.version||"?")+" · "+esc(p.scope||"")+(p.mcp.length?" · MCP: "+esc(p.mcp.join(", ")):"")+'</small></div><span class="tag '+(p.enabled?"on":"")+'">'+(p.enabled?"włączona":"wyłączona")+'</span>';
+    [[p.enabled?"disable":"enable",p.enabled?"Wyłącz":"Włącz"],["update","Aktualizuj"],["uninstall","Usuń"]].forEach(([a,l])=>{const x=document.createElement("button");x.textContent=l;x.onclick=()=>{if(a==="uninstall"&&!confirm("Usunąć "+p.id+"?"))return;pdo("api/plugins/do",{action:a,id:p.id},l)};r.append(x)});b.append(r)})}
+  else{b.insertAdjacentHTML("beforeend",'<p style="color:var(--mut)">Wyniki: '+d.total+(d.total>80?" (pokazuję 80, zawęź wyszukiwanie)":"")+"</p>");
+   d.available.forEach(p=>{const r=document.createElement("div");r.className="pr";r.innerHTML='<div class="i"><b>'+esc(p.name)+' <span class="tag">'+esc(p.market||"")+'</span></b><small>'+esc(p.desc)+"</small></div>";
+    const x=document.createElement("button");x.textContent=p.installed?"Zainstalowana":"Zainstaluj";x.disabled=p.installed;if(!p.installed)x.className="pri";x.onclick=()=>pdo("api/plugins/do",{action:"install",id:p.id},"Instaluję "+p.name);r.append(x);b.append(r)})}}
+ else if(ptab==="mcp"){const d=await api("api/mcp");b.innerHTML='<div class="add"><input id="mn" placeholder="nazwa"><input id="mu" placeholder="https://adres-serwera-mcp"><button class="pri" id="ma">Dodaj</button></div>';
+  $("ma").onclick=()=>pdo("api/mcp/do",{action:"add",name:$("mn").value,url:$("mu").value},"Dodaję MCP");
+  d.forEach(m=>{const r=document.createElement("div");r.className="pr";const ok=/✓|Connected/i.test(m.status);r.innerHTML='<div class="i"><b>'+esc(m.name)+'</b><small>'+esc(m.url)+" · "+esc(m.status)+'</small></div><span class="tag '+(ok?"on":"")+'">'+(ok?"działa":"błąd")+"</span>";
+   if(!m.name.startsWith("plugin:")){const x=document.createElement("button");x.textContent="Usuń";x.onclick=()=>confirm("Usunąć "+m.name+"?")&&pdo("api/mcp/do",{action:"remove",name:m.name},"Usuwam");r.append(x)}b.append(r)})}
+ else{const d=await api("api/marketplaces");b.innerHTML='<div class="add"><input id="ms" placeholder="owner/repo lub URL katalogu wtyczek"><button class="pri" id="mb">Dodaj źródło</button><button id="mup">Odśwież</button></div>';
+  $("mb").onclick=()=>pdo("api/marketplaces/do",{action:"add",source:$("ms").value},"Dodaję źródło");$("mup").onclick=()=>pdo("api/marketplaces/do",{action:"update"},"Odświeżam");
+  d.forEach(m=>{const n=m.name||m.id||JSON.stringify(m);const r=document.createElement("div");r.className="pr";r.innerHTML='<div class="i"><b>'+esc(n)+"</b><small>"+esc(m.source||m.repo||m.url||"")+"</small></div>";
+   const x=document.createElement("button");x.textContent="Usuń";x.onclick=()=>confirm("Usunąć źródło "+n+"?")&&pdo("api/marketplaces/do",{action:"remove",source:n},"Usuwam");r.append(x);b.append(r)})}}
+$("plg").onclick=()=>{$("side").classList.remove("open");$("pdlg").showModal();pmsg("");prender()};$("px").onclick=()=>$("pdlg").close();
+document.querySelectorAll(".tabs button").forEach(t=>t.onclick=()=>{document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("on"));t.classList.add("on");ptab=t.dataset.t;prender()});
+let pqt;$("pq").oninput=()=>{clearTimeout(pqt);pqt=setTimeout(prender,300)};
+fetch("api/auth").then(r=>r.json()).then(a=>{$("code").hidden=!a.totp;$("code").required=!!a.totp}).catch(()=>{});
 async function init(){stats();try{await api("/api/me");await load();sse()}catch(_){}}init();
 </script></html>

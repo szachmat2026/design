@@ -10,7 +10,7 @@ Wymaga zalogowanego `claude` (Claude Code CLI). Tylko stdlib.
 import argparse, getpass, hashlib, hmac, json, os, queue, secrets, shutil, subprocess, sys, threading, time, uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 
 HERE = Path(__file__).parent
 DATA = Path(os.environ.get("VOICEBOSS_HOME", Path.home() / ".voiceboss")); DATA.mkdir(parents=True, exist_ok=True)
@@ -64,8 +64,74 @@ def stats():
     return d
 
 
+import base64, re, struct
+
+
+def totp(secret, t=None, step=30):
+    key = base64.b32decode(secret.upper() + "=" * (-len(secret) % 8))
+    h = hmac.new(key, struct.pack(">Q", int((t or time.time()) // step)), "sha1").digest()
+    o = h[-1] & 15
+    return "%06d" % ((struct.unpack(">I", h[o:o + 4])[0] & 0x7FFFFFFF) % 10 ** 6)
+
+
+def check_totp(code):
+    sec = CFG.get("totp")
+    return bool(sec) and any(hmac.compare_digest(totp(sec, time.time() + d * 30), code.strip()) for d in (-1, 0, 1))
+
+
+def cli(args, timeout=180):
+    """Uruchamia `claude <args>` i zwraca (kod, tekst)."""
+    try:
+        r = subprocess.run([shutil.which("claude") or "claude", *args], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=timeout, cwd=ARGS.cwd if Path(ARGS.cwd).is_dir() else None)
+        return r.returncode, ((r.stdout or "") + (r.stderr or "")).strip()
+    except subprocess.TimeoutExpired:
+        return 124, "Przekroczono czas."
+    except FileNotFoundError:
+        return 127, "Nie znaleziono `claude`."
+
+
+_plug = {"t": 0, "d": None}
+SAFE = re.compile(r"^[\w.@:/~+-]{1,200}$")
+
+
+def plugin_list(force=False):
+    if force or not _plug["d"] or time.time() - _plug["t"] > 120:
+        rc, out = cli(["plugin", "list", "--json", "--available"], 120)
+        try: _plug["d"] = json.loads(out); _plug["t"] = time.time()
+        except ValueError: return {"installed": [], "available": [], "error": out[:300]}
+    return _plug["d"]
+
+
+def plugins_view(q):
+    d = plugin_list(); q = q.lower().strip()
+    inst = {i["id"] for i in d.get("installed", [])}
+    av = [{"id": a.get("pluginId"), "name": a.get("name"), "desc": (a.get("description") or "")[:200],
+           "market": a.get("marketplaceName"), "version": a.get("version"), "installed": a.get("pluginId") in inst}
+          for a in d.get("available", []) if not q or q in (a.get("name", "") + " " + (a.get("description") or "")).lower()]
+    ins = [{"id": i["id"], "version": i.get("version"), "scope": i.get("scope"), "enabled": i.get("enabled"),
+            "mcp": list((i.get("mcpServers") or {}).keys())} for i in d.get("installed", [])]
+    return {"installed": ins, "available": av[:80], "total": len(av), "error": d.get("error")}
+
+
+def mcp_view():
+    rc, out = cli(["mcp", "list"], 90); rows = []
+    for line in out.splitlines():
+        m = re.match(r"^(\S.*?): (\S+)(?: \((\w+)\))? - (.*)$", line)
+        if m: rows.append({"name": m.group(1), "url": m.group(2), "type": m.group(3), "status": m.group(4)})
+    return rows
+
+
+def market_view():
+    rc, out = cli(["plugin", "marketplace", "list", "--json"], 60)
+    try:
+        d = json.loads(out); return d if isinstance(d, list) else d.get("marketplaces", [])
+    except ValueError:
+        return [{"name": l.strip("- ").strip()} for l in out.splitlines() if l.strip() and not l.lower().startswith("config")]
+
+
 lock = threading.RLock()
-clients, procs, ARGS = [], {}, None
+clients, procs, ARGS, BASE = [], {}, None, ""
 TOKEN = secrets.token_urlsafe(16)
 fails = {}
 
@@ -217,27 +283,46 @@ class H(BaseHTTPRequestHandler):
 
     def set_cookie(self, tok):
         sec = "; Secure" if self.headers.get("X-Forwarded-Proto") == "https" else ""
-        return ("Set-Cookie", f"vb={tok}; HttpOnly; SameSite=Strict; Path=/; Max-Age={30*86400}{sec}")
+        return ("Set-Cookie", f"vb={tok}; HttpOnly; SameSite=Strict; Path={BASE or '/'}; Max-Age={30*86400}{sec}")
+
+    def rpath(self):
+        p = urlparse(self.path).path
+        if BASE:
+            if p == BASE: return None
+            p = p[len(BASE):] if p.startswith(BASE + "/") else "/__none"
+        return p
+
+    def client_ip(self):
+        ip = self.client_address[0]
+        if ip in ("127.0.0.1", "::1"):   # za tunelem/proxy
+            return self.headers.get("CF-Connecting-IP") or (self.headers.get("X-Forwarded-For") or ip).split(",")[0].strip()
+        return ip
 
     def same_origin(self):
         o = self.headers.get("Origin")
         return not o or urlparse(o).netloc == self.headers.get("Host")
 
     def do_GET(self):
-        u = urlparse(self.path); path = u.path
-        if path == "/" and u.query.startswith("t=") and u.query[2:] == TOKEN and self.loopback():
-            return self.send(302, b"", extra=[("Location", "/"), self.set_cookie(new_session())])
+        u = urlparse(self.path); path = self.rpath()
+        if path is None: return self.send(302, b"", extra=[("Location", BASE + "/")])
+        if path == "/" and u.query.startswith("t=") and u.query[2:] == TOKEN and self.loopback() and not self.headers.get("X-Forwarded-For") and not self.headers.get("CF-Connecting-IP"):
+            return self.send(302, b"", extra=[("Location", BASE + "/"), self.set_cookie(new_session())])
         if path == "/": return self.send(200, (HERE / "index.html").read_bytes(), "text/html")
         if path == "/manifest.json":
-            return self.send(200, {"name": "KADM Studio", "short_name": "KADM", "start_url": "/", "display": "standalone",
+            return self.send(200, {"name": "KADM Studio", "short_name": "KADM", "start_url": BASE + "/", "scope": BASE + "/", "display": "standalone",
                                    "background_color": "#0e1116", "theme_color": "#0e1116",
-                                   "icons": [{"src": "/icon.png", "sizes": "any", "type": "image/png"}]}, "application/manifest+json")
+                                   "icons": [{"src": BASE + "/icon.png", "sizes": "any", "type": "image/png"}]}, "application/manifest+json")
         if path == "/icon.png":
             f = HERE / "kadm.png"
             if f.exists(): return self.send(200, f.read_bytes(), "image/png")
             return self.send(404)
+        if path == "/api/auth": return self.send(200, {"totp": bool(CFG.get("totp"))})
         if not self.authed(): return self.send(401, {"error": "login"})
         if path == "/events": return self.sse()
+        if path == "/api/plugins":
+            return self.send(200, plugins_view(parse_qs(urlparse(self.path).query).get("q", [""])[0]))
+        if path == "/api/mcp": return self.send(200, mcp_view())
+        if path == "/api/marketplaces": return self.send(200, market_view())
         if path == "/api/stats": return self.send(200, stats())
         if path == "/api/me": return self.send(200, {"ok": True, **settings()})
         if path == "/api/chats":
@@ -266,18 +351,37 @@ class H(BaseHTTPRequestHandler):
         n = int(self.headers.get("Content-Length", 0) or 0)
         try: d = json.loads(self.rfile.read(n) or b"{}")
         except ValueError: return self.send(400)
-        path = urlparse(self.path).path
+        path = self.rpath()
+        if path is None: return self.send(404)
         if path == "/api/login":
-            ip = self.client_address[0]; now = time.time()
+            ip = self.client_ip(); now = time.time()
             fails[ip] = [t for t in fails.get(ip, []) if now - t < 60]
             if len(fails[ip]) >= 5: return self.send(429, {"error": "za dużo prób, odczekaj minutę"})
-            if check_pw(str(d.get("password", ""))):
+            if check_pw(str(d.get("password", ""))) and (not CFG.get("totp") or check_totp(str(d.get("code", "")))):
                 return self.send(200, {"ok": True}, extra=[self.set_cookie(new_session())])
             fails[ip].append(now); time.sleep(0.5); return self.send(401, {"error": "złe hasło"})
         if not self.authed(): return self.send(401, {"error": "login"})
         if path == "/api/logout":
             with lock: SESS.pop(hashlib.sha256((self.cookie() or "").encode()).hexdigest(), None); jsave(SESS_F, SESS)
-            return self.send(200, {"ok": True}, extra=[("Set-Cookie", "vb=; Max-Age=0; Path=/")])
+            return self.send(200, {"ok": True}, extra=[("Set-Cookie", f"vb=; Max-Age=0; Path={BASE or '/'}")])
+        if path == "/api/plugins/do":
+            act, pid = d.get("action"), str(d.get("id", ""))
+            if act not in ("install", "uninstall", "enable", "disable", "update") or not SAFE.match(pid): return self.send(400)
+            rc, out = cli(["plugin", act, pid]); plugin_list(True)
+            return self.send(200, {"ok": rc == 0, "out": out[-1500:]})
+        if path == "/api/marketplaces/do":
+            act, src = d.get("action"), str(d.get("source", ""))
+            if act not in ("add", "remove", "update") or (act != "update" and not SAFE.match(src)) or (src and not SAFE.match(src)): return self.send(400)
+            rc, out = cli(["plugin", "marketplace", act] + ([src] if src else [])); plugin_list(True)
+            return self.send(200, {"ok": rc == 0, "out": out[-1500:]})
+        if path == "/api/mcp/do":
+            act, name, url = d.get("action"), str(d.get("name", "")), str(d.get("url", ""))
+            if act == "add" and SAFE.match(name) and re.match(r"^https://[^\s]{4,300}$", url):
+                rc, out = cli(["mcp", "add", "--transport", "http", name, url])
+            elif act == "remove" and SAFE.match(name) and not name.startswith("plugin:"):
+                rc, out = cli(["mcp", "remove", name])
+            else: return self.send(400)
+            return self.send(200, {"ok": rc == 0, "out": out[-1500:]})
         if path == "/api/settings":
             for k in ("screen", "permission"):
                 if k in d: CFG[k] = d[k] if k == "screen" else (d[k] if d[k] in ("default", "acceptEdits", "plan", "auto") else "acceptEdits")
@@ -311,7 +415,7 @@ class H(BaseHTTPRequestHandler):
 
 
 def main():
-    global ARGS
+    global ARGS, BASE
     ap = argparse.ArgumentParser()
     ap.add_argument("--cwd", default=os.getcwd(), help="domyślny katalog roboczy nowych rozmów")
     ap.add_argument("--host", default="127.0.0.1"); ap.add_argument("--port", type=int, default=8765)
@@ -319,16 +423,23 @@ def main():
     ap.add_argument("--allowed", nargs="*", default=["Bash", "Read", "Edit", "Write", "Glob", "Grep"])
     ap.add_argument("--screen", action="store_true", help="ekran + mysz/klawiatura (screen.py)")
     ap.add_argument("--open", action="store_true"); ap.add_argument("--set-password", action="store_true")
+    ap.add_argument("--set-2fa", action="store_true", help="włącz kody z aplikacji uwierzytelniającej")
+    ap.add_argument("--base", default="", help="prefiks ścieżki, np. /studio (gdy serwowane pod kadm.app/studio)")
     ARGS = ap.parse_args()
+    BASE = "/" + ARGS.base.strip("/") if ARGS.base.strip("/") else ""
     for c in CHATS.values(): c["busy"] = False
     if ARGS.set_password:
         a, b = getpass.getpass("Nowe hasło (min. 8 znaków): "), getpass.getpass("Powtórz: ")
         if a != b or len(a) < 8: sys.exit("Hasła różne lub za krótkie.")
         CFG["pw"] = hash_pw(a); jsave(CFG_F, CFG); sys.exit("Hasło zapisane.")
+    if ARGS.set_2fa:
+        sec = base64.b32encode(secrets.token_bytes(20)).decode().rstrip("=")
+        CFG["totp"] = sec; jsave(CFG_F, CFG)
+        sys.exit(f"2FA włączone. Dodaj w aplikacji (Google Authenticator/Authy) -> wpis ręczny:\n  klucz: {sec}\n  lub URI: otpauth://totp/KADM%20Studio?secret={sec}&issuer=KADM")
     local = ARGS.host in ("127.0.0.1", "localhost", "::1")
     if not local and not CFG.get("pw"): sys.exit("Dostęp z sieci wymaga hasła: uruchom najpierw  python server.py --set-password")
     srv = ThreadingHTTPServer((ARGS.host, ARGS.port), H)
-    url = f"http://127.0.0.1:{ARGS.port}/"
+    url = f"http://127.0.0.1:{ARGS.port}{BASE}/"
     print(f"KADM Studio: {url}?t={TOKEN}  (automatyczne logowanie tylko z tego komputera)\nKatalog: {ARGS.cwd}  Dane: {DATA}")
     if not local: print(f"Nasłuch na {ARGS.host}:{ARGS.port} - zalogujesz się hasłem. Używaj HTTPS (Tailscale/Cloudflare Tunnel).")
     if ARGS.open:
