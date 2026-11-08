@@ -1,52 +1,142 @@
-<!doctype html><html lang="pl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Voice Boss</title>
+<!doctype html><html lang="pl"><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="manifest" href="/manifest.json"><link rel="icon" href="/icon.png">
+<meta name="theme-color" content="#0e1116">
+<title>KADM Studio</title>
 <style>
-:root{--bg:#0e1116;--fg:#e8eaed;--mut:#8b93a1;--acc:#4ade80;--bad:#f87171;--card:#171b22}
-@media(prefers-color-scheme:light){:root{--bg:#f6f7f9;--fg:#15181d;--mut:#5b6472;--card:#fff}}
-body{margin:0;background:var(--bg);color:var(--fg);font:16px system-ui,sans-serif;display:flex;flex-direction:column;height:100vh}
-header{padding:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-#mic{width:84px;height:84px;border-radius:50%;border:0;font-size:32px;cursor:pointer;background:var(--bad);color:#fff}
-#mic.on{background:var(--acc);color:#000;box-shadow:0 0 0 8px #4ade8033}
-#st{color:var(--mut)} label{color:var(--mut);font-size:14px}
-select,input{background:var(--card);color:var(--fg);border:1px solid #3333;border-radius:6px;padding:4px}
-#log{flex:1;overflow:auto;padding:0 16px 16px;display:flex;flex-direction:column;gap:6px}
-.m{padding:8px 12px;border-radius:10px;background:var(--card);max-width:80ch}
-.u{align-self:flex-end}.b{border-left:3px solid var(--acc)}.t{color:var(--mut);font:13px ui-monospace,monospace}
+/* Dopasuj do kadm.app: zmień tylko te zmienne */
+:root{--bg:#0e1116;--side:#12161d;--card:#171c25;--line:#262d39;--fg:#e8eaed;--mut:#8b93a1;--acc:#4ade80;--accfg:#06240f;--bad:#f87171;--r:12px;--font:system-ui,-apple-system,"Segoe UI",sans-serif}
+@media(prefers-color-scheme:light){:root:not([data-theme=dark]){--bg:#f6f7f9;--side:#fff;--card:#fff;--line:#e3e6eb;--fg:#15181d;--mut:#5b6472;--accfg:#04200d}}
+:root[data-theme=light]{--bg:#f6f7f9;--side:#fff;--card:#fff;--line:#e3e6eb;--fg:#15181d;--mut:#5b6472;--accfg:#04200d}
+*{box-sizing:border-box}html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 var(--font);display:flex;overflow:hidden}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:10px;padding:8px 12px}
+button:hover{border-color:var(--mut)}button.pri{background:var(--acc);color:var(--accfg);border-color:transparent;font-weight:600}
+button.bad{background:var(--bad);color:#fff;border-color:transparent}
+input,select,textarea{font:inherit;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+aside{width:272px;background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;flex:none;transition:transform .2s}
+.brand{display:flex;align-items:center;gap:10px;padding:14px 14px 8px;font-weight:700;font-size:17px}
+.brand img{width:26px;height:26px;border-radius:6px}
+#new{margin:8px 12px}
+#list{flex:1;overflow:auto;padding:4px 8px}
+.ci{padding:9px 10px;border-radius:9px;cursor:pointer;display:flex;gap:8px;align-items:center;color:var(--mut)}
+.ci:hover{background:var(--card)}.ci.on{background:var(--card);color:var(--fg)}
+.ci span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ci i{width:8px;height:8px;border-radius:50%;background:var(--acc);animation:p 1s infinite}
+@keyframes p{50%{opacity:.25}}
+.ci b{opacity:0;font-weight:400}.ci:hover b{opacity:.7}
+.foot{padding:10px 12px;border-top:1px solid var(--line);display:flex;gap:8px}
+main{flex:1;display:flex;flex-direction:column;min-width:0}
+.top{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.top h1{font-size:15px;margin:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+#burger{display:none}
+#msgs{flex:1;overflow:auto;padding:18px 14px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth}
+.w{max-width:860px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.m{padding:10px 14px;border-radius:var(--r);max-width:92%;word-wrap:break-word;overflow-wrap:anywhere}
+.m.user{align-self:flex-end;background:var(--acc);color:var(--accfg)}
+.m.assistant{align-self:flex-start;background:var(--card);border:1px solid var(--line)}
+.m p{margin:.3em 0}.m ul{margin:.3em 0;padding-left:1.3em}
+.m pre{background:#0008;color:#e8eaed;padding:10px;border-radius:8px;overflow:auto;font:13px/1.4 ui-monospace,Consolas,monospace;position:relative}
+.m code{font:13px ui-monospace,Consolas,monospace;background:#8883;padding:1px 5px;border-radius:5px}.m pre code{background:none;padding:0}
+.m a{color:inherit;text-decoration:underline}
+details.t{align-self:flex-start;color:var(--mut);font:13px ui-monospace,Consolas,monospace;max-width:92%}
+details.t summary{cursor:pointer}
+.live{align-self:flex-start;color:var(--mut);font-size:13px}.live .d{display:inline-block;animation:p 1s infinite}
+.empty{margin:auto;text-align:center;color:var(--mut)}
+#bar{border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+.cmp{max-width:860px;margin:0 auto;display:flex;gap:8px;align-items:flex-end}
+#in{flex:1;resize:none;max-height:200px;min-height:42px;border-radius:14px}
+#mic{width:42px;height:42px;padding:0;border-radius:50%;font-size:18px}#mic.on{background:var(--acc);color:var(--accfg);box-shadow:0 0 0 5px #4ade8044}
+#send{height:42px;border-radius:14px}
+.opts{max-width:860px;margin:6px auto 0;display:flex;gap:14px;flex-wrap:wrap;color:var(--mut);font-size:12px;align-items:center}
+.opts input[type=number]{width:3.5em;padding:2px 4px}
+dialog{background:var(--side);color:var(--fg);border:1px solid var(--line);border-radius:var(--r);width:min(440px,92vw)}
+dialog::backdrop{background:#0008}dialog label{display:block;margin:12px 0 4px;color:var(--mut);font-size:13px}dialog input,dialog select{width:100%}
+#login{position:fixed;inset:0;background:var(--bg);display:none;align-items:center;justify-content:center;z-index:9}
+#login form{background:var(--side);border:1px solid var(--line);padding:26px;border-radius:16px;width:min(340px,90vw);display:flex;flex-direction:column;gap:12px;text-align:center}
+#login img{width:56px;margin:0 auto;border-radius:12px}#err{color:var(--bad);font-size:13px;min-height:1em}
+@media(max-width:760px){aside{position:fixed;inset:0 auto 0 0;z-index:5;transform:translateX(-100%)}aside.open{transform:none}#burger{display:inline-block}.m{max-width:96%}}
 </style>
-<header>
- <button id="mic" title="Spacja">🎙</button>
- <div><div id="st">wyciszony</div>
- <label>tryb <select id="mode"><option value="toggle">przełącznik (spacja)</option><option value="ptt">przytrzymaj (spacja)</option></select></label>
- <label>cisza → odpowiedź <input id="sil" type="number" min="1" max="15" value="4" style="width:3em">s</label>
- <button id="stop" style="background:var(--bad);color:#fff;border:0;border-radius:6px;padding:6px 12px;cursor:pointer">STOP</button>
- <label><input id="tts" type="checkbox" checked> głos</label></div>
-</header>
-<div id="log"></div>
+<div id="login"><form id="lf"><img src="/icon.png" onerror="this.remove()" alt=""><h2 style="margin:0">KADM Studio</h2>
+ <input id="pw" type="password" placeholder="Hasło" autocomplete="current-password" required><button class="pri">Zaloguj</button><div id="err"></div></form></div>
+<aside id="side">
+ <div class="brand"><img src="/icon.png" onerror="this.remove()" alt="">KADM Studio</div>
+ <button id="new" class="pri">+ Nowa rozmowa</button><div id="list"></div>
+ <div class="foot"><button id="set" style="flex:1">Ustawienia</button><button id="out" title="Wyloguj">⏻</button></div>
+</aside>
+<main>
+ <div class="top"><button id="burger">☰</button><h1 id="title">KADM Studio</h1><button id="stop" class="bad" hidden>STOP</button></div>
+ <div id="msgs"><div class="w" id="w"></div></div>
+ <div id="bar"><div class="cmp">
+  <button id="mic" title="Mikrofon (Ctrl+Spacja)">🎙</button>
+  <textarea id="in" rows="1" placeholder="Napisz polecenie… (Enter wysyła, Shift+Enter nowa linia)"></textarea>
+  <button id="send" class="pri">Wyślij</button></div>
+  <div class="opts"><label><input id="tts" type="checkbox" checked> czytaj odpowiedzi na głos po mowie</label>
+  <label>cisza → wyślij <input id="sil" type="number" min="1" max="15" value="4">s</label><span id="st"></span></div></div>
+</main>
+<dialog id="dlg"><h3 style="margin:0">Ustawienia</h3>
+ <label>Katalog roboczy nowych rozmów</label><input id="cwd" placeholder="zostaw puste = domyślny">
+ <label>Uprawnienia agenta</label><select id="perm"><option value="acceptEdits">Edycje bez pytania (zalecane)</option><option value="auto">Auto</option><option value="default">Pytaj o wszystko</option><option value="plan">Tylko plan</option></select>
+ <label><input type="checkbox" id="scr" style="width:auto"> Dostęp do ekranu i myszy (screen.py)</label>
+ <label>Motyw</label><select id="theme"><option value="">Systemowy</option><option value="dark">Ciemny</option><option value="light">Jasny</option></select>
+ <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px"><button id="x">Anuluj</button><button id="ok" class="pri">Zapisz</button></div></dialog>
 <script>
-const T="__TOKEN__",$=id=>document.getElementById(id),log=$("log");
-const add=(c,t)=>{const d=document.createElement("div");d.className="m "+c;d.textContent=t;log.append(d);log.scrollTop=1e9};
+const $=id=>document.getElementById(id);let cur=null,chats=[],busy={},live=false,rec,buf="",timer,lastVoice=false,S={};
+const api=async(p,b,m)=>{const r=await fetch(p,{method:b===undefined?"GET":"POST",headers:{"Content-Type":"application/json"},body:b===undefined?undefined:JSON.stringify(b)});
+ if(r.status===401){$("login").style.display="flex";throw 0}return r.json()};
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function md(s){const code=[];s=esc(s).replace(/```(?:\w+)?\n?([\s\S]*?)```/g,(_,c)=>{code.push(c);return"\u0000"+(code.length-1)+"\u0000"});
+ s=s.replace(/`([^`\n]+)`/g,"<code>$1</code>").replace(/\*\*([^*\n]+)\*\*/g,"<b>$1</b>").replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+ s=s.replace(/(?:^|\n)((?:[-*] .+(?:\n|$))+)/g,(_,l)=>"<ul>"+l.trim().split("\n").map(x=>"<li>"+x.slice(2)+"</li>").join("")+"</ul>");
+ s=s.split(/\n{2,}/).map(p=>/^<ul|^\u0000/.test(p)?p:"<p>"+p.replace(/\n/g,"<br>")+"</p>").join("");
+ return s.replace(/\u0000(\d+)\u0000/g,(_,i)=>"<pre><code>"+code[i].replace(/\n$/,"")+"</code></pre>")}
+function bubble(m){const w=$("w");
+ if(m.role==="assistant"&&m.tools&&m.tools.length){const d=document.createElement("details");d.className="t";d.innerHTML="<summary>▸ "+m.tools.length+" akcji</summary>"+m.tools.map(t=>esc(t.name+": "+t.text)).join("<br>");w.append(d)}
+ const d=document.createElement("div");d.className="m "+m.role;d.innerHTML=m.role==="user"?"<p>"+esc(m.text).replace(/\n/g,"<br>")+"</p>":md(m.text);w.append(d)}
+const down=()=>{const m=$("msgs");m.scrollTop=m.scrollHeight};
+function liveEl(){let e=$("lv");if(!e){e=document.createElement("div");e.id="lv";e.className="live";$("w").append(e)}return e}
+function setBusy(b){$("stop").hidden=!b;$("st").textContent=b?"szef pracuje…":"";if(!b){const e=$("lv");if(e)e.remove()}}
+function renderList(){$("list").innerHTML="";chats.forEach(c=>{const d=document.createElement("div");d.className="ci"+(c.id===cur?" on":"");
+ d.innerHTML="<span>"+esc(c.title)+"</span>"+(c.busy?"<i></i>":"")+"<b title='Usuń'>✕</b>";
+ d.onclick=e=>{if(e.target.tagName==="B"){if(confirm("Usunąć rozmowę?"))api("/api/chats/"+c.id+"/delete",{}).then(()=>{if(cur===c.id)cur=null;load()});return}open(c.id);$("side").classList.remove("open")};$("list").append(d)})}
+async function load(){chats=await api("/api/chats");if(!cur&&chats[0])cur=chats[0].id;renderList();if(cur&&chats.find(c=>c.id===cur))await open(cur,1);else{cur=null;$("w").innerHTML='<div class="empty"><h2>KADM Studio</h2><p>Napisz lub powiedz, co ma zrobić szef.</p></div>';$("title").textContent="KADM Studio"}}
+async function open(id,keep){cur=id;const c=await api("/api/chats/"+id);$("title").textContent=c.title;$("w").innerHTML="";c.messages.forEach(bubble);setBusy(c.busy);if(c.busy)liveEl().innerHTML='<span class="d">●</span> pracuję…';renderList();down()}
+async function ensure(){if(cur)return;const c=await api("/api/chats",{});cur=c.id;await load()}
+async function send(text,voice){text=text.trim();if(!text)return;await ensure();lastVoice=!!voice;bubble({role:"user",text});setBusy(true);liveEl().innerHTML='<span class="d">●</span> pracuję…';down();
+ api("/api/chats/"+cur+"/say",{text,voice:!!voice})}
+$("send").onclick=()=>{send($("in").value,false);$("in").value="";grow()};
+const grow=()=>{const t=$("in");t.style.height="auto";t.style.height=Math.min(t.scrollHeight,200)+"px"};
+$("in").oninput=grow;$("in").onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing){e.preventDefault();$("send").click()}};
+$("new").onclick=async()=>{const c=await api("/api/chats",{});cur=c.id;await load();$("in").focus();$("side").classList.remove("open")};
+$("stop").onclick=()=>{speechSynthesis.cancel();cur&&api("/api/chats/"+cur+"/stop",{})};
+addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("stop").hidden)$("stop").click();if(e.code==="Space"&&e.ctrlKey){e.preventDefault();mic()}});
+$("burger").onclick=()=>$("side").classList.toggle("open");
+/* mikrofon */
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-if(!SR)add("t","Użyj Chrome lub Edge (brak Web Speech API).");
-let rec,live=false,buf="",timer,busy=false;
-const q=(p,o)=>fetch(p+"?t="+T,o);
-function send(){const s=buf.trim();buf="";if(!s)return;add("u",s);q("/say",{method:"POST",body:JSON.stringify({text:s})})}
-function arm(){clearTimeout(timer);timer=setTimeout(send,($("sil").value||4)*1000)}
-function start(){if(!SR)return;rec=new SR();rec.lang="pl-PL";rec.continuous=true;rec.interimResults=true;
- rec.onresult=e=>{speechSynthesis.cancel();let fin="";for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)fin+=e.results[i][0].transcript+" ";
-  if(fin)buf+=fin;arm()};
- rec.onend=()=>{if(live)try{rec.start()}catch(_){}};rec.start();live=true;ui()}
-function stop(){live=false;try{rec.stop()}catch(_){}clearTimeout(timer);send();ui()}
-function ui(){$("mic").classList.toggle("on",live);$("st").textContent=(live?"słucham":"wyciszony")+(busy?" · szef pracuje…":"")}
-$("stop").onclick=()=>{speechSynthesis.cancel();q("/stop",{method:"POST",body:"{}"})};
-addEventListener("keydown",e=>{if(e.code==="Escape")$("stop").click()});
-$("mic").onclick=()=>live?stop():start();
-addEventListener("keydown",e=>{if(e.code!=="Space"||e.repeat||/INPUT|SELECT/.test(e.target.tagName))return;e.preventDefault();
- if($("mode").value==="ptt")start();else live?stop():start()});
-addEventListener("keyup",e=>{if(e.code==="Space"&&$("mode").value==="ptt"&&live)stop()});
-const es=new EventSource("/events?t="+T);
-es.onmessage=m=>{const e=JSON.parse(m.data);
- if(e.type==="status"){busy=e.busy;ui()}
- else if(e.type==="tool")add("t","▸ "+e.name+": "+e.text);
- else if(e.type==="log")add("t",e.text);
- else if(e.type==="reply"){add("b",e.text);if($("tts").checked&&e.text){const u=new SpeechSynthesisUtterance(e.text);u.lang="pl-PL";speechSynthesis.speak(u)}}};
+function flush(){const s=buf.trim();buf="";if(s)send(s,true)}
+function mic(){if(!SR){alert("Mikrofon: użyj Chrome/Edge (HTTPS lub localhost).");return}
+ if(live){live=false;try{rec.stop()}catch(_){}clearTimeout(timer);flush();$("mic").classList.remove("on");return}
+ rec=new SR();rec.lang="pl-PL";rec.continuous=true;rec.interimResults=true;
+ rec.onresult=e=>{speechSynthesis.cancel();let f="";for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)f+=e.results[i][0].transcript+" ";
+  if(f)buf+=f;clearTimeout(timer);timer=setTimeout(flush,($("sil").value||4)*1000)};
+ rec.onend=()=>{if(live)try{rec.start()}catch(_){}};rec.onerror=e=>{if(e.error==="not-allowed"){live=false;$("mic").classList.remove("on");alert("Brak zgody na mikrofon.")}};
+ rec.start();live=true;$("mic").classList.add("on")}
+$("mic").onclick=mic;
+/* zdarzenia na żywo */
+function sse(){const es=new EventSource("/events");es.onmessage=m=>{const e=JSON.parse(m.data);
+ if(e.type==="chats")api("/api/chats").then(c=>{chats=c;renderList()});
+ else if(e.chat===cur){if(e.type==="busy")setBusy(e.busy);
+  else if(e.type==="tool")liveEl().innerHTML='<span class="d">●</span> '+esc(e.name+": "+e.text.slice(0,120));
+  else if(e.type==="msg"){setBusy(false);open(cur);if(e.msg.mode==="voice"&&lastVoice&&$("tts").checked){const u=new SpeechSynthesisUtterance(e.msg.text);u.lang="pl-PL";speechSynthesis.speak(u)}}}};
+ es.onerror=()=>{es.close();setTimeout(()=>api("/api/me").then(sse).catch(()=>{}),2000)}}
+/* ustawienia */
+const th=localStorage.getItem("theme");if(th)document.documentElement.dataset.theme=th;
+$("set").onclick=async()=>{S=await api("/api/me");$("scr").checked=!!S.screen;$("perm").value=S.permission;$("theme").value=localStorage.getItem("theme")||"";$("cwd").value=localStorage.getItem("cwd")||"";$("dlg").showModal()};
+$("x").onclick=()=>$("dlg").close();
+$("ok").onclick=async()=>{await api("/api/settings",{screen:$("scr").checked,permission:$("perm").value});
+ const t=$("theme").value;t?localStorage.setItem("theme",t):localStorage.removeItem("theme");document.documentElement.dataset.theme=t||"";
+ $("dlg").close()};
+$("out").onclick=async()=>{await api("/api/logout",{}).catch(()=>{});location.reload()};
+$("lf").onsubmit=async e=>{e.preventDefault();const r=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:$("pw").value})});
+ if(r.ok){$("login").style.display="none";init()}else $("err").textContent=(await r.json()).error||"Błąd"};
+async function init(){try{await api("/api/me");await load();sse()}catch(_){}}init();
 </script></html>

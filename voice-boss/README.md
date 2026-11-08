@@ -1,35 +1,32 @@
-# Voice Boss
+# KADM Studio (Voice Boss)
 
-Głosowy szef: mówisz → Claude Code (na Twoim PC) działa → odpowiada 1–2 zdaniami głosem.
+Czat z Claude Code działającym na Twoim PC: piszesz albo mówisz, szef wykonuje komendy, edytuje pliki,
+steruje ekranem i odpowiada. Historia rozmów, wiele rozmów naraz, działa też z telefonu.
 
-## Start (Windows, PowerShell)
+## Start (Windows)
 ```powershell
-cd voice-boss
-python server.py --cwd C:\Users\pionk\Desktop\PROJEKTY\cleanyourtv
+pip install pyautogui pillow          # tylko dla trybu ekranu / ikony
+python voice-boss\server.py --cwd $HOME --screen --open
 ```
-Otwórz wypisany link w Chrome/Edge. Wymagany zalogowany `claude` w PATH.
+Wymaga zalogowanego `claude` (wpisz `claude` raz i zaloguj się).
+Ikonka na pulpicie i autostart: `powershell -ExecutionPolicy Bypass -File voice-boss\install-shortcut.ps1 -Screen -Autostart`
 
 ## Obsługa
-- 🎙 / spacja: włącz/wycisz mikrofon (tryb „przytrzymaj” = push-to-talk).
-- Mówisz dużo → szef czeka. Dopiero po ciszy (domyślnie 4 s) wysyła całość i odpowiada.
-- Zaczynasz mówić → głos szefa przerywa się.
-- Wiadomości w trakcie pracy trafiają do kolejki. Widzisz na żywo, jakie komendy uruchamia (▸).
+- Pole tekstowe: Enter wysyła, Shift+Enter nowa linia. 🎙 lub Ctrl+Spacja = mikrofon (po ciszy wysyła i czyta odpowiedź).
+- Lewy panel: lista rozmów, nowa rozmowa, usuwanie. Ustawienia: uprawnienia, ekran, motyw.
+- STOP / Esc przerywa szefa. Tryb ekranu: dodatkowo mysz w lewy górny róg.
 
-## Bezpieczeństwo
-Szef wykonuje komendy (Bash/Edit/Write) bez pytania. Serwer słucha tylko na 127.0.0.1
-i wymaga losowego tokenu z linku. Zawęź uprawnienia: `--allowed Read Glob Grep`.
+## Dostęp z każdego miejsca (telefon, inny komputer)
+1. Ustaw hasło: `python voice-boss\server.py --set-password`
+2. Uruchom z dostępem z sieci: `python voice-boss\server.py --host 0.0.0.0 --cwd $HOME`
+3. Wejdź z innego urządzenia przez **HTTPS**. Najbezpieczniej: Tailscale (`tailscale serve 8765`) lub Cloudflare Tunnel.
+   Nie wystawiaj portu bezpośrednio do internetu.
+Logowanie hasłem (scrypt), ciasteczko HttpOnly/SameSite, limit 5 prób/min, blokada żądań z obcych stron.
+Na telefonie: „Dodaj do ekranu głównego" instaluje to jak aplikację.
 
-## Sterowanie ekranem (opcjonalne)
-```powershell
-pip install pyautogui pillow
-python server.py --cwd $HOME --screen
-```
-Szef robi zrzuty ekranu (`screen.py shot`), czyta je i klika/pisze (`click`, `type`, `key`, `scroll`).
-Przerwanie: przycisk **STOP** / klawisz **Esc** w UI albo ruch myszą w lewy górny róg ekranu.
+## Wygląd
+Kolory i czcionka to zmienne CSS na górze `index.html` (`--acc`, `--bg`...). Logo: `python voice-boss\make_icon.py`
+pobiera je z kadm.app (lub wrzuć `voice-boss\kadm.png`).
 
-## Ikonka "KADM Studio" na pulpicie (logo z kadm.app)
-```powershell
-powershell -ExecutionPolicy Bypass -File voice-boss\install-shortcut.ps1 -Screen
-```
-Dodaj `-Autostart`, by szef startował razem z Windows. Kliknięcie ikonki uruchamia serwer
-(zminimalizowane okno) i otwiera przeglądarkę. Zamknięcie tego okna wyłącza szefa.
+## Uwaga
+Szef wykonuje komendy na Twoim komputerze bez pytania (tryb `acceptEdits`). Dane rozmów: `%USERPROFILE%\.voiceboss`.
