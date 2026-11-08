@@ -106,8 +106,8 @@ dialog,#login form{border-radius:10px}#login .logo{display:block}
 .art .k{fill:#1b2a21}@media(prefers-color-scheme:dark){:root:not([data-theme=light]) .art .k{fill:#3a5443}}:root[data-theme=dark] .art .k{fill:#3a5443}
 @media(max-width:760px){.hero{grid-template-columns:1fr;gap:18px}.art{max-height:200px}}
 dialog#pdlg,dialog#udlg{width:min(760px,96vw);max-height:86vh;padding:0;overflow:hidden}#pdlg[open],#udlg[open]{display:flex;flex-direction:column}
-.ph{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 6px}.ph h3{margin:0;letter-spacing:-.02em}
-.tabs{display:flex;gap:4px;padding:4px 12px 8px;border-bottom:1px solid var(--line);overflow:auto}.tabs button{border:0;background:none;color:var(--mut);border-radius:6px;white-space:nowrap}.tabs button.on{background:var(--sage);color:var(--fg)}
+.ph{flex:none;display:flex;justify-content:space-between;align-items:center;padding:14px 16px 6px}.ph h3{margin:0;letter-spacing:-.02em}
+.tabs{flex:none;display:flex;gap:4px;padding:4px 12px 8px;overflow-y:hidden;border-bottom:1px solid var(--line);overflow:auto}.tabs button{border:0;background:none;color:var(--mut);border-radius:6px;white-space:nowrap}.tabs button.on{background:var(--sage);color:var(--fg)}
 #pq{margin:10px 16px 0;width:calc(100% - 32px)}#pbody,#ubody{overflow:auto;padding:8px 16px;flex:1;min-height:200px}
 .pr{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}.pr .i{flex:1;min-width:0}.pr .i b{display:block;overflow:hidden;text-overflow:ellipsis}.pr .i small{color:var(--mut);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pr button{padding:5px 10px;font-size:13px}.tag{font-size:11px;border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--mut)}.tag.on{background:var(--acc);color:var(--accfg);border-color:transparent}
@@ -119,6 +119,10 @@ dialog#pdlg,dialog#udlg{width:min(760px,96vw);max-height:86vh;padding:0;overflow
 .row2{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.pt{font-size:11px;color:var(--mut);border:1px solid var(--line);border-radius:4px;padding:0 5px;margin-left:4px;font-weight:400}
 .tk{cursor:pointer}#prov{max-width:150px;padding:5px 8px;font-size:13px}table.t{width:100%;border-collapse:collapse;font-size:13px}table.t td{padding:6px 4px;border-bottom:1px solid var(--line)}
 @media(max-width:760px){#prov{max-width:110px}.f{grid-template-columns:1fr}}
+.live{align-self:stretch;max-width:92%;font-size:14px}.lh{color:var(--mut);display:flex;gap:6px;align-items:center;margin-bottom:6px}.lh b{color:var(--fg)}#lt{font:12px ui-monospace,Consolas,monospace}
+details.st{border-left:2px solid var(--green);padding:2px 0 2px 10px;margin:4px 0;color:var(--mut);font:13px ui-monospace,Consolas,monospace}details.st summary{cursor:pointer;list-style:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+details.st summary b{color:var(--fg)}details.st pre{margin:6px 0;max-height:240px;overflow:auto;background:#1b2a21;color:#ecebe3;padding:8px;border-radius:6px;white-space:pre-wrap;word-break:break-word;font-size:12px}
+.lx{margin-top:8px;box-shadow:none}
 </style>
 <div id="login"><form id="lf"><svg class="logo" viewBox="0 0 44 44" aria-hidden="true"><rect width="44" height="44" rx="10" fill="#1b2a21"/><rect x="11" y="9" width="6.5" height="26" rx="1.5" fill="#c6f26b"/><path d="M17.5 24v-6L30 9l4 5zM17.5 23l7-2 10 9.5-4 4.5z" fill="#c6f26b"/></svg><h2 style="margin:0">kadm <small style="font-weight:400;color:var(--mut);font-size:.6em">studio</small></h2>
  <input id="pw" type="password" placeholder="Hasło" autocomplete="current-password" required><input id="code" inputmode="numeric" maxlength="6" placeholder="Kod z aplikacji (2FA)" autocomplete="one-time-code" hidden><button class="pri">Zaloguj</button><div id="err"></div></form></div>
@@ -141,12 +145,15 @@ dialog#pdlg,dialog#udlg{width:min(760px,96vw);max-height:86vh;padding:0;overflow
  <div class="tabs"><button data-t="use" class="on">Zużycie</button><button data-t="prov">Dostawcy</button><button data-t="lim">Limity</button><button data-t="act">Rozmowy</button></div>
  <div id="ubody"></div><div id="umsg"></div></dialog>
 <dialog id="pdlg"><div class="ph"><h3>Wtyczki i MCP</h3><button id="px">✕</button></div>
- <div class="tabs"><button data-t="inst" class="on">Zainstalowane</button><button data-t="cat">Katalog</button><button data-t="mcp">MCP</button><button data-t="mk">Źródła</button></div>
+ <div class="tabs"><button data-t="inst" class="on">Zainstalowane</button><button data-t="cat">Katalog</button><button data-t="gh">Odkrywaj (GitHub)</button><button data-t="mcp">MCP</button><button data-t="mk">Źródła</button></div>
  <input id="pq" placeholder="Szukaj w katalogu…" hidden><div id="pbody"></div><div id="pmsg"></div></dialog>
 <dialog id="dlg"><h3 style="margin:0">Ustawienia</h3>
  <label>Katalog roboczy nowych rozmów</label><input id="cwd" placeholder="zostaw puste = domyślny">
  <label>Uprawnienia agenta</label><select id="perm"><option value="acceptEdits">Edycje bez pytania (zalecane)</option><option value="auto">Auto</option><option value="default">Pytaj o wszystko</option><option value="plan">Tylko plan</option></select>
  <label><input type="checkbox" id="scr" style="width:auto"> Dostęp do ekranu i myszy (screen.py)</label>
+ <label>Głos odczytu</label><select id="voice"></select>
+ <label>Tempo mowy <span id="rv">1.05</span>×</label><input id="rate" type="range" min="0.7" max="1.5" step="0.05" value="1.05">
+ <div style="margin-top:6px"><button id="vt" type="button">▶ Posłuchaj głosu</button> <small id="vhint" style="color:var(--mut)">Najlepsze: głosy neuronowe z serwera (★) albo Microsoft „Natural/Online” w Edge.</small></div>
  <label>Motyw</label><select id="theme"><option value="">Systemowy</option><option value="dark">Ciemny</option><option value="light">Jasny</option></select>
  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px"><button id="x">Anuluj</button><button id="ok" class="pri">Zapisz</button></div></dialog>
 <script>
@@ -160,13 +167,21 @@ function md(s){const code=[];s=esc(s).replace(/```(?:\w+)?\n?([\s\S]*?)```/g,(_,
  s=s.split(/\n{2,}/).map(p=>/^<ul|^\u0000/.test(p)?p:"<p>"+p.replace(/\n/g,"<br>")+"</p>").join("");
  return s.replace(/\u0000(\d+)\u0000/g,(_,i)=>"<pre><code>"+code[i].replace(/\n$/,"")+"</code></pre>")}
 function bubble(m){const w=$("w");
- if(m.role==="assistant"&&m.tools&&m.tools.length){const d=document.createElement("details");d.className="t";d.innerHTML="<summary>▸ "+m.tools.length+" akcji</summary>"+m.tools.map(t=>esc(t.name+": "+t.text)).join("<br>");w.append(d)}
+ if(m.role==="assistant"&&m.tools&&m.tools.length){const d=document.createElement("details");d.className="t";d.innerHTML="<summary>▸ "+m.tools.length+" akcji</summary>"+m.tools.map((t,i)=>stepHtml(t,false,i)).join("");w.append(d)}
  const d=document.createElement("div");d.className="m "+m.role;d.innerHTML=m.role==="user"?"<p>"+esc(m.text).replace(/\n/g,"<br>")+"</p>":md(m.text);
  d.querySelectorAll("pre").forEach(p=>{const b=document.createElement("button");b.className="cp";b.textContent="Kopiuj";b.onclick=()=>{navigator.clipboard.writeText(p.innerText.replace(/^Kopiuj\n?/,""));b.textContent="✓";setTimeout(()=>b.textContent="Kopiuj",1200)};p.append(b)});
- w.append(d);const t=document.createElement("div");t.className="ts"+(m.role==="user"?" u":"");t.textContent=new Date((m.ts||Date.now()/1000)*1000).toLocaleTimeString("pl-PL",{hour:"2-digit",minute:"2-digit"})+(m.role==="assistant"&&m.provider?" · "+PN[m.provider]+(m.usage&&(m.usage.in||m.usage.out)?" · "+fmt((m.usage.in||0)+(m.usage.out||0))+(m.usage.est?" tok (szac.)":" tok"):"")+(m.fallback&&m.fallback.length?" · po limicie: "+m.fallback.map(x=>PN[x]).join(", "):""):"");w.append(t)}
+ w.append(d);const t=document.createElement("div");t.className="ts"+(m.role==="user"?" u":"");t.textContent=new Date((m.ts||Date.now()/1000)*1000).toLocaleTimeString("pl-PL",{hour:"2-digit",minute:"2-digit"})+(m.role==="assistant"&&m.provider?" · "+PN[m.provider]+(m.usage&&(m.usage.in||m.usage.out)?" · "+fmt((m.usage.in||0)+(m.usage.out||0))+(m.usage.est?" tok (szac.)":" tok"):"")+(m.fallback&&m.fallback.length?" · po limicie: "+m.fallback.map(x=>PN[x]).join(", "):""):"")+(m.comment?" · komentarz w trakcie pracy":"");w.append(t);const lv=$("lv");if(lv)w.append(lv)}
 const down=()=>{const m=$("msgs");m.scrollTop=m.scrollHeight};
-function liveEl(){let e=$("lv");if(!e){e=document.createElement("div");e.id="lv";e.className="live";$("w").append(e)}return e}
-function setBusy(b){$("stop").hidden=!b;$("st").textContent=b?"szef pracuje…":"";if(!b){const e=$("lv");if(e)e.remove()}}
+let LV=null,busyNow=false,lvTimer=null,lvRaf=0,ackT=null,lvOpen={};
+const ICON={Write:"📝",Edit:"✏️",Bash:"⚡",Read:"📖",Glob:"🔎",Grep:"🔎",ollama:"🧠",limit:"⚠️",WoL:"⏰"};
+function stepHtml(s,open,i){return '<details class="st" data-i="'+i+'"'+(open?" open":"")+"><summary>"+(ICON[s.name]||"🔧")+" <b>"+esc(s.name)+"</b> "+esc((s.text||"").slice(0,140))+"</summary><pre>"+esc(s.detail||"")+(s.result?"\n→ "+esc(s.result):"")+"</pre></details>"}
+function lvTick(){const e=$("lt");if(e&&LV){const s=Math.max(0,Math.floor(Date.now()/1000-LV.t0));e.textContent=Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}}
+function lvStart(l){LV=l?{t0:l.t0,steps:l.steps||[],text:l.text||""}:{t0:Date.now()/1000,steps:[],text:""};lvRender();clearInterval(lvTimer);lvTimer=setInterval(lvTick,500)}
+function lvRender(){if(!LV)return;cancelAnimationFrame(lvRaf);lvRaf=requestAnimationFrame(()=>{if(!LV)return;let e=$("lv");if(!e){e=document.createElement("div");e.id="lv";e.className="live";$("w").append(e)}else $("w").append(e);
+ e.innerHTML='<div class="lh"><span class="d">●</span> <b>Pracuję</b> <span id="lt"></span></div>'+LV.steps.map((s,i)=>stepHtml(s,lvOpen[i]??(i===LV.steps.length-1),i)).join("")+(LV.text?'<div class="m assistant lx">'+md(LV.text)+"</div>":"");
+ e.querySelectorAll("details.st").forEach(d=>d.ontoggle=()=>{lvOpen[d.dataset.i]=d.open});lvTick();down()})}
+function lvStop(){clearInterval(lvTimer);LV=null;lvOpen={};const e=$("lv");if(e)e.remove()}
+function setBusy(b){busyNow=b;$("stop").hidden=!b;$("st").textContent=b?"szef pracuje · możesz dodać komentarz":"";$("in").placeholder=b?"Dodaj komentarz do trwającej pracy…":"Napisz polecenie… (Enter wysyła, Shift+Enter nowa linia)";$("send").textContent=b?"Komentarz":"Wyślij";if(!b){lvStop();clearTimeout(ackT)}}
 function renderList(){$("list").innerHTML="";chats.forEach(c=>{const d=document.createElement("div");d.className="ci"+(c.id===cur?" on":"");
  d.innerHTML="<span>"+esc(c.title)+"</span>"+(c.provider&&c.provider!=="auto"?'<small class="pt">'+PN[c.provider]+"</small>":"")+(c.tokens?'<small class="pt">'+fmt(c.tokens)+"</small>":"")+(c.busy?"<i></i>":"")+"<b title='Usuń'>✕</b>";
  d.onclick=e=>{if(e.target.tagName==="B"){if(confirm("Usunąć rozmowę?"))api("/api/chats/"+c.id+"/delete",{}).then(()=>{if(cur===c.id)cur=null;load()});return}open(c.id);$("side").classList.remove("open")};$("list").append(d)})}
@@ -175,15 +190,16 @@ const SUG=[["A / 01","Stan komputera","Sprawdź CPU, RAM, dysk i największe pro
 const ART=`<svg viewBox="0 0 360 300" class="art" aria-hidden="true"><defs><pattern id="g" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0V30" fill="none" stroke="currentColor" stroke-opacity=".08"/></pattern><filter id="sh" x="-20%" y="-20%" width="150%" height="150%"><feDropShadow dx="6" dy="10" stdDeviation="9" flood-opacity=".22"/></filter></defs><rect width="360" height="300" fill="url(#g)"/><polygon class="k" points="95,92 168,78 168,262 95,276"/><g filter="url(#sh)"><polygon points="168,150 232,70 290,118 226,198" fill="#c6f26b"/><polygon points="170,212 226,166 294,236 234,284" fill="#879a6f"/></g></svg>`;
 function hero(){$("w").innerHTML='<div class="hero"><div><span class="pill"><i></i>Twój agent na komputerze</span><h2>Powiedz, co zrobić.<br>Szef to zrobi.</h2><p>Pisz albo mów. Agent wykonuje komendy, edytuje pliki i steruje ekranem na Twoim komputerze.</p></div>'+ART+'</div><div class="sug"></div>';
  SUG.forEach(([n,t,p])=>{const b=document.createElement("button");b.innerHTML="<em>"+n+"</em><b>"+t+"</b><small>"+p+"</small>";b.onclick=()=>send(p,false);$("w").querySelector(".sug").append(b)})}
-async function open(id,keep){cur=id;const c=await api("/api/chats/"+id);$("title").textContent=c.title;$("prov").hidden=false;$("prov").value=c.provider||"auto";$("w").innerHTML="";c.messages.length?c.messages.forEach(bubble):hero();setBusy(c.busy);if(c.busy)liveEl().innerHTML='<span class="d">●</span> pracuję…';renderList();down()}
+async function open(id,keep){cur=id;const c=await api("/api/chats/"+id);$("title").textContent=c.title;$("prov").hidden=false;$("prov").value=c.provider||"auto";$("w").innerHTML="";c.messages.length?c.messages.forEach(bubble):hero();setBusy(c.busy);if(c.busy&&c.live)lvStart(c.live);renderList();down()}
 async function ensure(){if(cur)return;const c=await api("/api/chats",{});cur=c.id;await load()}
-async function send(text,voice){text=text.trim();if(!text)return;await ensure();lastVoice=!!voice;bubble({role:"user",text});setBusy(true);liveEl().innerHTML='<span class="d">●</span> pracuję…';down();
- api("/api/chats/"+cur+"/say",{text,voice:!!voice})}
+async function send(text,voice){text=text.trim();if(!text)return;await ensure();if($("w").querySelector(".hero"))$("w").innerHTML="";lastVoice=!!voice;const comment=busyNow;bubble({role:"user",text,comment});
+ if(!comment){setBusy(true);lvStart();clearTimeout(ackT);if(voice)ackT=setTimeout(()=>{if(busyNow&&$("tts").checked)speak("Już się za to biorę.")},2500)}
+ down();api("/api/chats/"+cur+"/say",{text,voice:!!voice})}
 $("send").onclick=()=>{send($("in").value,false);$("in").value="";grow()};
 const grow=()=>{const t=$("in");t.style.height="auto";t.style.height=Math.min(t.scrollHeight,200)+"px"};
 $("in").oninput=grow;$("in").onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing){e.preventDefault();$("send").click()}};
 $("new").onclick=async()=>{const c=await api("/api/chats",{});cur=c.id;await load();$("in").focus();$("side").classList.remove("open")};
-$("stop").onclick=()=>{speechSynthesis.cancel();cur&&api("/api/chats/"+cur+"/stop",{})};
+$("stop").onclick=()=>{stopSpeak();cur&&api("/api/chats/"+cur+"/stop",{})};
 addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("stop").hidden)$("stop").click();if(e.code==="Space"&&e.ctrlKey){e.preventDefault();mic()}});
 $("burger").onclick=()=>$("side").classList.toggle("open");
 /* mikrofon */
@@ -192,7 +208,7 @@ function flush(){const s=buf.trim();buf="";$("hear").textContent="";if(s)send(s,
 function mic(){if(!SR){alert("Mikrofon: użyj Chrome/Edge (HTTPS lub localhost).");return}
  if(live){live=false;try{rec.stop()}catch(_){}clearTimeout(timer);flush();$("mic").classList.remove("on");return}
  rec=new SR();rec.lang="pl-PL";rec.continuous=true;rec.interimResults=true;
- rec.onresult=e=>{speechSynthesis.cancel();let f="",im="";for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i];r.isFinal?f+=r[0].transcript+" ":im+=r[0].transcript}
+ rec.onresult=e=>{stopSpeak();let f="",im="";for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i];r.isFinal?f+=r[0].transcript+" ":im+=r[0].transcript}
   if(f)buf+=f;$("hear").textContent=(buf+im).trim();$("mic").classList.add("talk");clearTimeout(window._tk);window._tk=setTimeout(()=>$("mic").classList.remove("talk"),900);clearTimeout(timer);timer=setTimeout(flush,($("sil").value||4)*1000)};
  rec.onend=()=>{if(live)try{rec.start()}catch(_){}};rec.onerror=e=>{if(e.error==="not-allowed"){live=false;$("mic").classList.remove("on");alert("Brak zgody na mikrofon.")}};
  rec.start();live=true;$("mic").classList.add("on")}
@@ -201,8 +217,10 @@ $("mic").onclick=mic;
 function sse(){const es=new EventSource("events");es.onmessage=m=>{const e=JSON.parse(m.data);
  if(e.type==="chats")api("/api/chats").then(c=>{chats=c;renderList()});
  else if(e.chat===cur){if(e.type==="busy")setBusy(e.busy);
-  else if(e.type==="tool")liveEl().innerHTML='<span class="d">●</span> '+esc(e.name+": "+e.text.slice(0,120));
-  else if(e.type==="msg"){setBusy(false);open(cur);if(e.msg.mode==="voice"&&lastVoice&&$("tts").checked){const u=new SpeechSynthesisUtterance(e.msg.text);u.lang="pl-PL";speechSynthesis.speak(u)}}}};
+  else if(e.type==="tool"){if(!LV)lvStart();LV.steps.push({name:e.name,text:e.text,detail:e.detail});lvRender()}
+  else if(e.type==="toolres"){if(LV&&LV.steps.length){LV.steps[LV.steps.length-1].result=e.text;lvRender()}}
+  else if(e.type==="delta"){if(!LV)lvStart();clearTimeout(ackT);LV.text+=e.text;lvRender()}
+  else if(e.type==="msg"){setBusy(false);open(cur);if(e.msg.mode==="voice"&&lastVoice&&$("tts").checked){speak(e.msg.text)}}}};
  es.onerror=()=>{es.close();setTimeout(()=>api("/api/me").then(sse).catch(()=>{}),2000)}}
 /* ustawienia */
 const th=localStorage.getItem("theme");if(th)document.documentElement.dataset.theme=th;
@@ -219,17 +237,25 @@ async function stats(){try{const s=await api("/api/stats");$("stats").innerHTML=
 setInterval(stats,3000);
 
 /* ---- zarządzanie wtyczkami ---- */
-let ptab="inst",pbusy=false;const pmsg=t=>$("pmsg").textContent=t||"";
+let ptab="inst",pbusy=false,catMarket="",pLimit=60,ghPage=1;const pmsg=t=>$("pmsg").textContent=t||"";
 async function pdo(path,body,label){if(pbusy)return;pbusy=true;pmsg((label||"Pracuję")+"… (może potrwać)");try{const r=await api(path,body);pmsg((r.ok?"✓ Gotowe. Zmiany działają w nowych rozmowach.\n":"✗ Błąd.\n")+(r.out||""))}catch(_){pmsg("Błąd połączenia")}pbusy=false;prender()}
 async function prender(){const b=$("pbody");$("pq").hidden=ptab!=="cat";b.innerHTML='<p style="color:var(--mut)">Ładuję…</p>';
- if(ptab==="inst"||ptab==="cat"){const d=await api("api/plugins?q="+encodeURIComponent(ptab==="cat"?$("pq").value:""));b.innerHTML="";if(d.error)b.textContent=d.error;
+ if(ptab==="inst"||ptab==="cat"){const d=await api("api/plugins?q="+encodeURIComponent(ptab==="cat"?$("pq").value:"")+"&market="+encodeURIComponent(ptab==="cat"?catMarket:"")+"&limit="+pLimit);b.innerHTML="";if(d.error)b.textContent=d.error;
   if(ptab==="inst"){if(!d.installed.length)b.innerHTML='<p style="color:var(--mut)">Brak zainstalowanych wtyczek.</p>';
    d.installed.forEach(p=>{const r=document.createElement("div");r.className="pr";r.innerHTML='<div class="i"><b>'+esc(p.id)+'</b><small>v'+esc(p.version||"?")+" · "+esc(p.scope||"")+(p.mcp.length?" · MCP: "+esc(p.mcp.join(", ")):"")+'</small></div><span class="tag '+(p.enabled?"on":"")+'">'+(p.enabled?"włączona":"wyłączona")+'</span>';
     [[p.enabled?"disable":"enable",p.enabled?"Wyłącz":"Włącz"],["update","Aktualizuj"],["uninstall","Usuń"]].forEach(([a,l])=>{const x=document.createElement("button");x.textContent=l;x.onclick=()=>{if(a==="uninstall"&&!confirm("Usunąć "+p.id+"?"))return;pdo("api/plugins/do",{action:a,id:p.id},l)};r.append(x)});b.append(r)})}
-  else{b.insertAdjacentHTML("beforeend",'<p style="color:var(--mut)">Wyniki: '+d.total+(d.total>80?" (pokazuję 80, zawęź wyszukiwanie)":"")+"</p>");
+  else{b.innerHTML='<div class="add" style="margin-top:0"><select id="pm"><option value="">Wszystkie katalogi ('+d.markets.reduce((a,m)=>a+m.count,0)+")</option>"+d.markets.map(m=>'<option value="'+esc(m.name)+'">'+esc(m.name)+" ("+m.count+")</option>").join("")+'</select></div><p style="color:var(--mut)">Wyniki: '+d.total+(d.total>d.available.length?" (pokazuję "+d.available.length+")":"")+(d.total===0?" · dodaj więcej katalogów w zakładce Odkrywaj":"")+"</p>";$("pm").value=catMarket;$("pm").onchange=()=>{catMarket=$("pm").value;pLimit=60;prender()};
    d.available.forEach(p=>{const r=document.createElement("div");r.className="pr";r.innerHTML='<div class="i"><b>'+esc(p.name)+' <span class="tag">'+esc(p.market||"")+'</span></b><small>'+esc(p.desc)+"</small></div>";
-    const x=document.createElement("button");x.textContent=p.installed?"Zainstalowana":"Zainstaluj";x.disabled=p.installed;if(!p.installed)x.className="pri";x.onclick=()=>pdo("api/plugins/do",{action:"install",id:p.id},"Instaluję "+p.name);r.append(x);b.append(r)})}}
- else if(ptab==="mcp"){const d=await api("api/mcp");b.innerHTML='<div class="add"><input id="mn" placeholder="nazwa"><input id="mu" placeholder="https://adres-serwera-mcp"><button class="pri" id="ma">Dodaj</button></div>';
+    const x=document.createElement("button");x.textContent=p.installed?"Zainstalowana":"Zainstaluj";x.disabled=p.installed;if(!p.installed)x.className="pri";x.onclick=()=>pdo("api/plugins/do",{action:"install",id:p.id},"Instaluję "+p.name);r.append(x);b.append(r)});if(d.available.length<d.total){const m=document.createElement("button");m.textContent="Pokaż więcej ("+(d.total-d.available.length)+")";m.onclick=()=>{pLimit+=60;prender()};b.append(m)}}}
+ else if(ptab==="gh"){b.innerHTML='<p style="color:var(--mut);margin:6px 0">Katalogi wtyczek z GitHuba. Dodaj katalog, a jego wtyczki pojawią się w zakładce Katalog.</p><div class="add"><input id="gq" placeholder="Szukaj katalogów (np. security, marketing) lub wpisz owner/repo"><button class="pri" id="gs">Szukaj</button></div><div class="add" style="flex-wrap:wrap" id="gf"></div><label style="font-size:12px;color:var(--mut)"><input type="checkbox" id="gall" style="width:auto"> szukaj też zwykłych repozytoriów z wtyczkami (nie zawsze są katalogami)</label><div id="gres"></div><div class="add" style="margin-top:16px"><input id="gt" type="password" placeholder="Token GitHub (opcjonalnie, zwiększa limit zapytań)"><button id="gtb">Zapisz token</button></div>';
+  ["wshobson/agents","phuryn/pm-skills","wondelai/skills"].forEach(r=>{const x=document.createElement("button");x.textContent="＋ "+r;x.onclick=()=>padd(r);$("gf").append(x)});
+  const run=async(more)=>{if(!more)ghPage=1;$("gres").innerHTML=more?$("gres").innerHTML:'<p style="color:var(--mut)">Szukam…</p>';const d=await api("api/github/search?q="+encodeURIComponent($("gq").value)+"&page="+ghPage+($("gall").checked?"&all=1":""));
+   const box=more?$("gres"):(()=>{$("gres").innerHTML=d.error?'<p style="color:var(--bad)">'+esc(d.error)+"</p>":'<p style="color:var(--mut)">Znaleziono: '+d.total+"</p>";return $("gres")})();
+   d.items.forEach(i=>{const r=document.createElement("div");r.className="pr";r.innerHTML='<div class="i"><b>'+esc(i.repo)+' <span class="tag">★ '+fmt(i.stars)+'</span></b><small>'+esc(i.desc)+(i.updated?" · "+i.updated:"")+"</small></div>";
+    const x=document.createElement("button");x.className="pri";x.textContent="Dodaj katalog";x.onclick=()=>padd(i.repo);r.append(x);box.append(r)});
+   if(d.items.length>=20){const m=document.createElement("button");m.textContent="Więcej";m.onclick=()=>{m.remove();ghPage++;run(true)};box.append(m)}};
+  $("gs").onclick=()=>run(false);$("gq").onkeydown=e=>{if(e.key==="Enter")run(false)};$("gall").onchange=()=>run(false);
+  $("gtb").onclick=async()=>{const r=await api("api/github/token",{token:$("gt").value});pmsg(r.token?"✓ Token zapisany.":"Token usunięty.");$("gt").value=""};run(false)} else if(ptab==="mcp"){const d=await api("api/mcp");b.innerHTML='<div class="add"><input id="mn" placeholder="nazwa"><input id="mu" placeholder="https://adres-serwera-mcp"><button class="pri" id="ma">Dodaj</button></div>';
   $("ma").onclick=()=>pdo("api/mcp/do",{action:"add",name:$("mn").value,url:$("mu").value},"Dodaję MCP");
   d.forEach(m=>{const r=document.createElement("div");r.className="pr";const ok=/✓|Connected/i.test(m.status);r.innerHTML='<div class="i"><b>'+esc(m.name)+'</b><small>'+esc(m.url)+" · "+esc(m.status)+'</small></div><span class="tag '+(ok?"on":"")+'">'+(ok?"działa":"błąd")+"</span>";
    if(!m.name.startsWith("plugin:")){const x=document.createElement("button");x.textContent="Usuń";x.onclick=()=>confirm("Usunąć "+m.name+"?")&&pdo("api/mcp/do",{action:"remove",name:m.name},"Usuwam");r.append(x)}b.append(r)})}
@@ -238,7 +264,10 @@ async function prender(){const b=$("pbody");$("pq").hidden=ptab!=="cat";b.innerH
   d.forEach(m=>{const n=m.name||m.id||JSON.stringify(m);const r=document.createElement("div");r.className="pr";r.innerHTML='<div class="i"><b>'+esc(n)+"</b><small>"+esc(m.source||m.repo||m.url||"")+"</small></div>";
    const x=document.createElement("button");x.textContent="Usuń";x.onclick=()=>confirm("Usunąć źródło "+n+"?")&&pdo("api/marketplaces/do",{action:"remove",source:n},"Usuwam");r.append(x);b.append(r)})}}
 $("plg").onclick=()=>{$("side").classList.remove("open");$("pdlg").showModal();pmsg("");prender()};$("px").onclick=()=>$("pdlg").close();
-document.querySelectorAll("#pdlg .tabs button").forEach(t=>t.onclick=()=>{document.querySelectorAll("#pdlg .tabs button").forEach(x=>x.classList.remove("on"));t.classList.add("on");ptab=t.dataset.t;prender()});
+function setTab(t){ptab=t;document.querySelectorAll("#pdlg .tabs button").forEach(x=>x.classList.toggle("on",x.dataset.t===t));prender()}
+document.querySelectorAll("#pdlg .tabs button").forEach(t=>t.onclick=()=>setTab(t.dataset.t));
+async function padd(src){if(pbusy)return;pbusy=true;pmsg("Dodaję katalog "+src+"… (pobieram z GitHuba, chwilę potrwa)");try{const r=await api("api/marketplaces/do",{action:"add",source:src});
+ pmsg((r.ok?"✓ Dodano. ":"✗ Nie udało się (to repozytorium może nie być katalogiem wtyczek). ")+(r.out||""));if(r.ok&&r.added&&r.added.length){catMarket=r.added[0];pLimit=60;pbusy=false;setTab("cat");return}}catch(_){pmsg("Błąd połączenia")}pbusy=false;prender()}
 let pqt;$("pq").oninput=()=>{clearTimeout(pqt);pqt=setTimeout(prender,300)};
 
 /* ---- zużycie, dostawcy, limity, rozmowy ---- */
@@ -259,9 +288,9 @@ async function urender(){const b=$("ubody");const el=document.activeElement;if(e
   const FIELDS={codex:[["model","Model"],["args","Argumenty CLI"]],ollama:[["url","Adres Ollama"],["model","Model (puste = pierwszy)"],["mac","MAC (Wake-on-LAN)"],["broadcast","Broadcast LAN"],["wake_timeout","Czas budzenia (s)"]],custom:[["label","Nazwa"],["cmd","Polecenie (np. opencode run)"]],claude:[]};
   pv.providers.forEach(p=>{const [st,ok]=pstat(p);const d=document.createElement("div");d.className="card";
    d.innerHTML='<div style="display:flex;gap:8px;align-items:center"><b style="flex:1">'+esc(p.label)+'</b><span class="tag '+(ok?"on":"")+'">'+st+'</span></div><small>dziś: '+fmt(p.today_tokens)+" tok"+(p.free?" · lokalny (bez limitu)":"")+"</small>"+
-    '<div class="f">'+(FIELDS[p.id]||[]).map(([k,l])=>"<label>"+l+'</label><input data-f="'+k+'" value="'+esc(Array.isArray(p[k])?p[k].join(" "):String(p[k]??""))+'">').join("")+(p.id==="custom"?'<label>Prompt przez stdin</label><input type="checkbox" data-f="stdin" '+(p.stdin?"checked":"")+' style="width:auto">':"")+"</div>";
+    '<div class="f">'+(FIELDS[p.id]||[]).map(([k,l])=>"<label>"+l+'</label><input data-f="'+k+'" value="'+esc(Array.isArray(p[k])?p[k].join(" "):String(p[k]??""))+'">').join("")+(({claude:[["live","Tryb na żywo (strumień, komentarze w trakcie)"]],ollama:[["agent","Agent: komendy i pliki"]],custom:[["stdin","Prompt przez stdin"]]})[p.id]||[]).map(([k,l])=>"<label>"+l+'</label><input type="checkbox" data-f="'+k+'" '+(p[k]!==false&&p[k]?"checked":"")+' style="width:auto">').join("")+"</div>";
    const r=document.createElement("div");r.className="row2";
-   [[p.enabled?"Wyłącz":"Włącz",()=>udo("api/providers/save",{id:p.id,enabled:!p.enabled})],["Testuj",()=>udo("api/providers/test",{id:p.id},"Testuję")],...(FIELDS[p.id].length||p.id==="custom"?[["Zapisz",()=>{const o={id:p.id};d.querySelectorAll("[data-f]").forEach(i=>o[i.dataset.f]=i.type==="checkbox"?i.checked:i.value);udo("api/providers/save",o)},1]]:[])].forEach(([l,f,pri])=>{const x=document.createElement("button");x.textContent=l;if(pri)x.className="pri";x.onclick=f;r.append(x)});d.append(r);b.append(d)});
+   [[p.enabled?"Wyłącz":"Włącz",()=>udo("api/providers/save",{id:p.id,enabled:!p.enabled})],["Testuj",()=>udo("api/providers/test",{id:p.id},"Testuję")],...(true?[["Zapisz",()=>{const o={id:p.id};d.querySelectorAll("[data-f]").forEach(i=>o[i.dataset.f]=i.type==="checkbox"?i.checked:i.value);udo("api/providers/save",o)},1]]:[])].forEach(([l,f,pri])=>{const x=document.createElement("button");x.textContent=l;if(pri)x.className="pri";x.onclick=f;r.append(x)});d.append(r);b.append(d)});
   const ch=document.createElement("div");ch.className="card";ch.innerHTML="<b>Kolejność w trybie Auto</b><br><small>Gdy dostawca zgłosi limit, aplikacja przełącza na następnego (blokada 30 min). Lokalne AI zwykle na końcu.</small>";
   pv.chain.forEach((id,i)=>{const r=document.createElement("div");r.className="pr";r.innerHTML='<div class="i"><b>'+(i+1)+". "+PN[id]+"</b></div>";
    [["↑",-1],["↓",1]].forEach(([l,dl])=>{const x=document.createElement("button");x.textContent=l;x.disabled=(i+dl<0||i+dl>=pv.chain.length);x.onclick=()=>{const c=[...pv.chain];[c[i],c[i+dl]]=[c[i+dl],c[i]];udo("api/chain",{chain:c})};r.append(x)});ch.append(r)});
@@ -277,6 +306,33 @@ async function urender(){const b=$("ubody");const el=document.activeElement;if(e
 $("usg").onclick=()=>{$("side").classList.remove("open");$("udlg").showModal();umsg("");urender()};$("ux").onclick=()=>$("udlg").close();
 document.querySelectorAll("#udlg .tabs button").forEach(t=>t.onclick=()=>{document.querySelectorAll("#udlg .tabs button").forEach(x=>x.classList.remove("on"));t.classList.add("on");utab=t.dataset.t;urender()});
 setInterval(()=>{if($("udlg").open&&utab==="act")urender()},3000);$("stats").onclick=e=>{if(e.target.closest(".tk"))$("usg").click()};
+
+/* ---- głosy ---- */
+const vlist=()=>speechSynthesis.getVoices();
+const vscore=x=>(/natural|neural|online/i.test(x.name)?4:0)+(/google/i.test(x.name)?2:0)+(x.localService?0:1);
+function bestVoice(){const v=vlist(),pl=v.filter(x=>/^pl/i.test(x.lang)).sort((a,b)=>vscore(b)-vscore(a));return pl[0]||v[0]}
+let curAudio=null,spk=0,NEURAL=[];
+function stopSpeak(){spk++;try{speechSynthesis.cancel()}catch(_){}if(curAudio){curAudio.pause();curAudio=null}}
+function browserSpeak(clean,id){if(!("speechSynthesis" in window)||id!==spk)return;const v=vlist().find(x=>"b:"+x.name===localStorage.getItem("voice"))||bestVoice();
+ (clean.match(/[^.!?\n]+[.!?]*/g)||[clean]).map(s=>s.trim()).filter(Boolean).forEach(s=>{const u=new SpeechSynthesisUtterance(s.slice(0,220));
+  if(v){u.voice=v;u.lang=v.lang}else u.lang="pl-PL";u.rate=parseFloat(localStorage.getItem("rate")||"1.05");speechSynthesis.speak(u)})}
+async function neuralSpeak(clean,voice,id){const parts=clean.match(/[^.!?\n]+[.!?]*/g)||[clean],ch=[];let b="";for(const s of parts){if((b+s).length>350&&b){ch.push(b);b=""}b+=s}if(b)ch.push(b);
+ const get=t=>fetch("api/tts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:t,voice})}).then(r=>{if(!r.ok)throw 0;return r.blob()}).then(URL.createObjectURL);
+ let next=get(ch[0]);for(let i=0;i<ch.length;i++){const url=await next;if(id!==spk)return;if(i+1<ch.length)next=get(ch[i+1]);
+  await new Promise(res=>{const a=new Audio(url);a.playbackRate=parseFloat(localStorage.getItem("rate")||"1.05");curAudio=a;a.onended=a.onerror=res;a.play().catch(res)})}}
+function speak(t){stopSpeak();const id=spk,sel=localStorage.getItem("voice")||(NEURAL.length?"n:"+NEURAL[0].id:"");
+ const clean=t.replace(/```[\s\S]*?```/g," (blok kodu) ").replace(/[`*_#>|]/g,"").replace(/https?:\/\/\S+/g," link ").trim();if(!clean)return;
+ if(sel.startsWith("n:"))neuralSpeak(clean,sel.slice(2),id).catch(()=>browserSpeak(clean,id));else browserSpeak(clean,id)}
+function fillVoices(){const sel=$("voice");if(!sel)return;const cv=localStorage.getItem("voice")||(NEURAL.length?"n:"+NEURAL[0].id:"b:"+((bestVoice()||{}).name||""));
+ const v=vlist().sort((a,b)=>(/^pl/i.test(b.lang)-/^pl/i.test(a.lang))||vscore(b)-vscore(a)||a.name.localeCompare(b.name));
+ sel.innerHTML=(NEURAL.length?'<optgroup label="Neuronowe (serwer, najlepsza jakość)">'+NEURAL.map(x=>'<option value="n:'+x.id+'">★ '+esc(x.label)+"</option>").join("")+"</optgroup>":"")+
+  '<optgroup label="Przeglądarka / system">'+(v.map(x=>'<option value="b:'+esc(x.name)+'">'+esc(x.name)+" ("+x.lang+")"+(/^pl/i.test(x.lang)&&vscore(x)>=4?" ★":"")+"</option>").join("")||"<option>brak głosów</option>")+"</optgroup>";sel.value=cv}
+if("speechSynthesis" in window){speechSynthesis.onvoiceschanged=fillVoices}
+fillVoices();fetch("api/tts/voices").then(r=>r.ok?r.json():null).then(d=>{if(d&&d.available){NEURAL=d.voices;fillVoices()}else if(d){$("vhint").textContent="Głosy neuronowe: na komputerze z serwerem wpisz  pip install edge-tts  i zrestartuj serwer."}}).catch(()=>{});
+$("voice").onchange=()=>localStorage.setItem("voice",$("voice").value);
+$("rate").value=localStorage.getItem("rate")||"1.05";$("rv").textContent=$("rate").value;
+$("rate").oninput=()=>{localStorage.setItem("rate",$("rate").value);$("rv").textContent=$("rate").value};
+$("vt").onclick=()=>speak("Cześć, tak brzmi mój głos. Gotowe, pierwsze zadanie zostało wykonane.");
 fetch("api/auth").then(r=>r.json()).then(a=>{$("code").hidden=!a.totp;$("code").required=!!a.totp}).catch(()=>{});
 async function init(){stats();refreshProv();try{await api("/api/me");await load();sse()}catch(_){}}init();
 </script></html>

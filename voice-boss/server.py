@@ -104,15 +104,45 @@ def plugin_list(force=False):
     return _plug["d"]
 
 
-def plugins_view(q):
+def plugins_view(q, market="", limit=60):
     d = plugin_list(); q = q.lower().strip()
     inst = {i["id"] for i in d.get("installed", [])}
+    allav = d.get("available", []); counts = {}
+    for a in allav: counts[a.get("marketplaceName")] = counts.get(a.get("marketplaceName"), 0) + 1
     av = [{"id": a.get("pluginId"), "name": a.get("name"), "desc": (a.get("description") or "")[:200],
            "market": a.get("marketplaceName"), "version": a.get("version"), "installed": a.get("pluginId") in inst}
-          for a in d.get("available", []) if not q or q in (a.get("name", "") + " " + (a.get("description") or "")).lower()]
+          for a in allav if (not market or a.get("marketplaceName") == market) and (not q or q in (a.get("name", "") + " " + (a.get("description") or "")).lower())]
     ins = [{"id": i["id"], "version": i.get("version"), "scope": i.get("scope"), "enabled": i.get("enabled"),
             "mcp": list((i.get("mcpServers") or {}).keys())} for i in d.get("installed", [])]
-    return {"installed": ins, "available": av[:80], "total": len(av), "error": d.get("error")}
+    return {"installed": ins, "available": av[:max(10, min(limit, 400))], "total": len(av), "error": d.get("error"),
+            "markets": sorted(({"name": k, "count": v} for k, v in counts.items() if k), key=lambda x: -x["count"])}
+
+
+def gh_token():
+    return os.environ.get("GITHUB_TOKEN") or CFG.get("github_token") or ""
+
+
+def gh_search(q, page=1, broad=False):
+    """Wyszukuje na GitHubie katalogi wtyczek Claude Code (temat claude-code-marketplace) albo repo wprowadzone jako owner/repo."""
+    import urllib.request, urllib.error
+    h = {"User-Agent": "kadm-studio", "Accept": "application/vnd.github+json"}
+    if gh_token(): h["Authorization"] = "Bearer " + gh_token()
+    q = q.strip()
+    if re.match(r"^[\w.-]+/[\w.-]+$", q): url = "https://api.github.com/search/repositories?q=" + "repo:" + q
+    else:
+        topic = "topic:claude-code-plugin" if broad else "topic:claude-code-marketplace"
+        from urllib.parse import quote
+        url = "https://api.github.com/search/repositories?q=" + quote((q + " " + topic).strip()) + "&sort=stars&order=desc&per_page=20&page=" + str(max(1, min(page, 10)))
+    try:
+        with urllib.request.urlopen(urllib.request.Request(url, headers=h), timeout=20) as r: d = json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        return {"error": "Limit zapytań GitHub (dodaj token poniżej)." if e.code in (403, 429) else f"GitHub: HTTP {e.code}", "items": []}
+    except Exception as e:  # noqa
+        return {"error": f"Brak połączenia z GitHub: {e}", "items": []}
+    items = d["items"] if "items" in d else [d]
+    return {"total": d.get("total_count", len(items)), "token": bool(gh_token()), "items": [
+        {"repo": i["full_name"], "stars": i.get("stargazers_count", 0), "desc": (i.get("description") or "")[:200],
+         "topics": (i.get("topics") or [])[:6], "updated": (i.get("pushed_at") or "")[:10]} for i in items]}
 
 
 def mcp_view():
@@ -185,7 +215,7 @@ def broadcast(ev):
 
 
 def save_chats():
-    with lock: jsave(CHATS_F, CHATS)
+    with lock: jsave(CHATS_F, {k: {a: b for a, b in c.items() if not a.startswith("_")} for k, c in CHATS.items()})
 
 
 def settings():
@@ -205,24 +235,42 @@ def add_msg(c, m):
     save_chats()
 
 
+def mode_prefix(mode):
+    return "[Wiadomość głosowa: odpowiedz 1-2 krótkimi zdaniami, bez markdownu.] " if mode == "voice" else ""
+
+
 def run_job(c, text, mode):
     st = settings()
-    sysm = SYS_BASE + (SYS_VOICE if mode == "voice" else SYS_TEXT) + (SYS_SCREEN.format(p=str(HERE)) if st["screen"] else "")
+    screen = SYS_SCREEN.format(p=str(HERE)) if st["screen"] else ""
+    sysm = SYS_BASE + (SYS_VOICE if mode == "voice" else SYS_TEXT) + screen
     cwd = c["cwd"] if Path(c["cwd"]).is_dir() else None
     c["busy"] = True; broadcast({"type": "busy", "chat": c["id"], "busy": True})
     hist = [{"role": m["role"], "text": m["text"]} for m in c["messages"][:-1] if m.get("text")]
     tools, tried, res = [], [], None
+    c["_live"] = live = {"t0": time.time(), "text": "", "steps": []}
 
-    def tool(name, txt):
-        d = {"name": name, "text": txt}; tools.append(d); broadcast({"type": "tool", "chat": c["id"], **d})
+    def tool(name, txt, detail=None):
+        d = {"name": name, "text": txt, "detail": detail or txt}; tools.append(d); live["steps"].append(dict(d))
+        broadcast({"type": "tool", "chat": c["id"], **d})
+
+    def toolres(txt):
+        if live["steps"]: live["steps"][-1]["result"] = txt
+        if tools: tools[-1]["result"] = txt
+        broadcast({"type": "toolres", "chat": c["id"], "text": txt})
+
+    def delta(t):
+        live["text"] += t; broadcast({"type": "delta", "chat": c["id"], "text": t})
 
     def register(p): procs[c["id"]] = p
 
-    ctx = {"text": text, "sysm": sysm, "sysm_plain": SYS_BASE + " Nie masz dostępu do narzędzi ani plików: odpowiadaj tekstem." + (SYS_VOICE if mode == "voice" else SYS_TEXT),
+    ctx = {"text": text, "text_live": mode_prefix(mode) + text, "chat_id": c["id"], "sysm": sysm, "sysm_live": SYS_BASE + SYS_TEXT + screen,
+           "sysm_plain": SYS_BASE + " Nie masz dostępu do narzędzi ani plików: odpowiadaj tekstem." + (SYS_VOICE if mode == "voice" else SYS_TEXT),
+           "sysm_agent": SYS_BASE + " Masz narzędzia (run_command, read_file, list_dir, write_file): używaj ich, żeby faktycznie wykonać zadanie, krok po kroku. Na końcu krótko podsumuj wynik." + (SYS_VOICE if mode == "voice" else SYS_TEXT),
            "permission": st["permission"], "allowed": ARGS.allowed, "cwd": cwd, "session": c.get("session"), "history": hist,
-           "tool": tool, "register": register}
+           "tool": tool, "toolres": toolres, "delta": delta, "turn_end": lambda: None, "register": register}
     try:
         for pid in P.order(CFG, USAGE, c.get("provider", "auto")):
+            live["text"] = ""; live["steps"].clear(); tools.clear()
             res = P.run(pid, CFG, ctx); tried.append(pid)
             if res.get("session") and pid == "claude": c["session"] = res["session"]
             if res.get("error") == "limit":
@@ -236,12 +284,15 @@ def run_job(c, text, mode):
         procs.pop(c["id"], None)
     if res is None:
         res = {"reply": "Brak dostępnego dostawcy AI (limity, budżet lub wyłączeni). Zmień dostawcę lub limity w „Zużycie”.", "usage": {}, "provider": None}
-    u = res.get("usage") or {}
-    if res.get("provider"):
-        USAGE.add(chat=c["id"], provider=res["provider"], **{k: u.get(k, 0) for k in ("in", "out", "cache")}, usd=u.get("usd"), est=bool(u.get("est")))
-    m = {"role": "assistant", "text": (res.get("reply") or "(brak odpowiedzi)").strip(), "tools": tools, "mode": mode,
-         "provider": res.get("provider"), "usage": u, "fallback": tried[:-1], "error": res.get("error")}
-    add_msg(c, m); broadcast({"type": "msg", "chat": c["id"], "msg": m})
+    turns = res.get("turns") or [{"reply": res.get("reply"), "usage": res.get("usage") or {}, "tools": [dict(t) for t in tools], "error": res.get("error")}]
+    for i, t in enumerate(turns):
+        u = t.get("usage") or {}
+        if res.get("provider"):
+            USAGE.add(chat=c["id"], provider=res["provider"], **{k: u.get(k, 0) for k in ("in", "out", "cache")}, usd=u.get("usd"), est=bool(u.get("est")))
+        m = {"role": "assistant", "text": (t.get("reply") or "(brak odpowiedzi)").strip(), "tools": [{**d, "detail": (d.get("detail") or "")[:2500]} for d in t.get("tools", [])], "mode": mode,
+             "provider": res.get("provider"), "usage": u, "fallback": tried[:-1] if i == 0 else [], "error": t.get("error")}
+        add_msg(c, m); broadcast({"type": "msg", "chat": c["id"], "msg": m})
+    c.pop("_live", None)
     with lock:
         nxt = c.pop("pending", [])
         if not nxt: c["busy"] = False
@@ -253,9 +304,11 @@ def run_job(c, text, mode):
 
 def say(c, text, mode):
     m = {"role": "user", "text": text, "mode": mode}
+    if c.get("busy"): m["comment"] = True
     add_msg(c, m)
     if c["title"] == "Nowa rozmowa":
         c["title"] = text[:48]; save_chats(); broadcast({"type": "chats"})
+    if c.get("busy") and P.inject(c["id"], mode_prefix(mode) + text): return m, "injected"
     with lock:
         if c.get("busy"):
             c.setdefault("pending", []).append((text, mode)); return m, "queued"
@@ -322,10 +375,23 @@ class H(BaseHTTPRequestHandler):
         if path == "/api/auth": return self.send(200, {"totp": bool(CFG.get("totp"))})
         if not self.authed(): return self.send(401, {"error": "login"})
         if path == "/events": return self.sse()
+        if path == "/api/tts/voices":
+            import importlib.util
+            return self.send(200, {"available": bool(importlib.util.find_spec("edge_tts")), "voices": [
+                {"id": "pl-PL-ZofiaNeural", "label": "Zofia (PL, kobieta)"}, {"id": "pl-PL-MarekNeural", "label": "Marek (PL, mężczyzna)"},
+                {"id": "en-US-AriaNeural", "label": "Aria (EN)"}, {"id": "en-GB-RyanNeural", "label": "Ryan (EN-GB)"}]})
         if path == "/api/usage": return self.send(200, USAGE.view(P.merged(CFG)))
         if path == "/api/providers": return self.send(200, P.status(CFG, USAGE))
         if path == "/api/plugins":
-            return self.send(200, plugins_view(parse_qs(urlparse(self.path).query).get("q", [""])[0]))
+            qs = parse_qs(urlparse(self.path).query); g = lambda k, d="": qs.get(k, [d])[0]
+            try: lim = int(g("limit", "60"))
+            except ValueError: lim = 60
+            return self.send(200, plugins_view(g("q"), g("market"), lim))
+        if path == "/api/github/search":
+            qs = parse_qs(urlparse(self.path).query); g = lambda k, d="": qs.get(k, [d])[0]
+            try: pg = int(g("page", "1"))
+            except ValueError: pg = 1
+            return self.send(200, gh_search(g("q"), pg, g("all") == "1"))
         if path == "/api/mcp": return self.send(200, mcp_view())
         if path == "/api/marketplaces": return self.send(200, market_view())
         if path == "/api/stats": return self.send(200, stats())
@@ -334,7 +400,7 @@ class H(BaseHTTPRequestHandler):
             with lock: return self.send(200, sorted((summary(c) for c in CHATS.values()), key=lambda x: -x["updated"]))
         if path.startswith("/api/chats/"):
             c = CHATS.get(path.split("/")[3])
-            return self.send(200, {**summary(c), "messages": c["messages"]}) if c else self.send(404)
+            return self.send(200, {**summary(c), "messages": c["messages"], "live": c.get("_live")}) if c else self.send(404)
         self.send(404)
 
     def sse(self):
@@ -369,11 +435,34 @@ class H(BaseHTTPRequestHandler):
         if path == "/api/logout":
             with lock: SESS.pop(hashlib.sha256((self.cookie() or "").encode()).hexdigest(), None); jsave(SESS_F, SESS)
             return self.send(200, {"ok": True}, extra=[("Set-Cookie", f"vb=; Max-Age=0; Path={BASE or '/'}")])
+        if path == "/api/tts":
+            import importlib.util
+            if not importlib.util.find_spec("edge_tts"): return self.send(501, {"error": "pip install edge-tts"})
+            voice, text = str(d.get("voice", "")), str(d.get("text", ""))[:1200]
+            if not re.match(r"^[a-z]{2,3}-[A-Z]{2}-\w{3,30}Neural$", voice) or not text.strip(): return self.send(400)
+            try:
+                import asyncio, edge_tts
+                async def go():
+                    out = b""
+                    async for ch in edge_tts.Communicate(text, voice).stream():
+                        if ch.get("type") == "audio": out += ch["data"]
+                    return out
+                audio = asyncio.run(go())
+            except Exception as e:  # noqa
+                return self.send(502, {"error": str(e)[:200]})
+            return self.send(200, audio, "audio/mpeg")
+        if path == "/api/github/token":
+            t = str(d.get("token", "")).strip()
+            if t and not re.match(r"^[\w-]{20,255}$", t): return self.send(400, {"error": "zły token"})
+            if t: CFG["github_token"] = t
+            else: CFG.pop("github_token", None)
+            jsave(CFG_F, CFG); return self.send(200, {"ok": True, "token": bool(t)})
         if path == "/api/stopall":
             for c in CHATS.values():
                 c.pop("pending", None)
                 p = procs.get(c["id"])
                 if p and p.poll() is None: p.kill()
+                P.SESS.pop(c["id"], None)
             return self.send(200, {"ok": True})
         if path == "/api/providers/save":
             pid = d.get("id")
@@ -410,8 +499,10 @@ class H(BaseHTTPRequestHandler):
         if path == "/api/marketplaces/do":
             act, src = d.get("action"), str(d.get("source", ""))
             if act not in ("add", "remove", "update") or (act != "update" and not SAFE.match(src)) or (src and not SAFE.match(src)): return self.send(400)
-            rc, out = cli(["plugin", "marketplace", act] + ([src] if src else [])); plugin_list(True)
-            return self.send(200, {"ok": rc == 0, "out": out[-1500:]})
+            before = {a.get("marketplaceName") for a in plugin_list().get("available", [])}
+            rc, out = cli(["plugin", "marketplace", act] + ([src] if src else []), 240)
+            after = {a.get("marketplaceName") for a in plugin_list(True).get("available", [])}
+            return self.send(200, {"ok": rc == 0, "out": out[-1500:], "added": sorted(x for x in after - before if x)})
         if path == "/api/mcp/do":
             act, name, url = d.get("action"), str(d.get("name", "")), str(d.get("url", ""))
             if act == "add" and SAFE.match(name) and re.match(r"^https://[^\s]{4,300}$", url):
@@ -445,12 +536,14 @@ class H(BaseHTTPRequestHandler):
                 with lock: c.pop("pending", None)
                 p = procs.get(c["id"])
                 if p and p.poll() is None: p.kill()
+                P.SESS.pop(c["id"], None)
                 return self.send(200, {"ok": True})
             if act == "rename":
                 c["title"] = str(d.get("title", ""))[:80] or c["title"]; save_chats(); broadcast({"type": "chats"}); return self.send(200, {"ok": True})
             if act == "delete":
                 p = procs.get(c["id"])
                 if p and p.poll() is None: p.kill()
+                P.SESS.pop(c["id"], None)
                 with lock: CHATS.pop(c["id"], None)
                 save_chats(); broadcast({"type": "chats"}); return self.send(200, {"ok": True})
         self.send(404)
@@ -480,6 +573,7 @@ def main():
         sys.exit(f"2FA włączone. Dodaj w aplikacji (Google Authenticator/Authy) -> wpis ręczny:\n  klucz: {sec}\n  lub URI: otpauth://totp/KADM%20Studio?secret={sec}&issuer=KADM")
     local = ARGS.host in ("127.0.0.1", "localhost", "::1")
     if not local and not CFG.get("pw"): sys.exit("Dostęp z sieci wymaga hasła: uruchom najpierw  python server.py --set-password")
+    threading.Thread(target=P.reap, daemon=True).start()
     srv = ThreadingHTTPServer((ARGS.host, ARGS.port), H)
     url = f"http://127.0.0.1:{ARGS.port}{BASE}/"
     print(f"KADM Studio: {url}?t={TOKEN}  (automatyczne logowanie tylko z tego komputera)\nKatalog: {ARGS.cwd}  Dane: {DATA}")

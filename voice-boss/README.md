@@ -50,6 +50,26 @@ Dostawca jest ustawiany per rozmowa (lista w nagłówku): **Auto**, Claude Code,
 `/etc/systemd/system/kadm-studio.service`: `ExecStart=/usr/bin/python3 /opt/design/voice-boss/server.py --cwd /srv/work --base /studio`,
 `Restart=always`, `User=kadm`. Potem `systemctl enable --now kadm-studio`. Na serwerze zaloguj `claude` i `codex` tym samym użytkownikiem.
 
+## Praca na żywo i komentarze
+Odpowiedź pojawia się w trakcie pisania, a pod nią kroki agenta (komendy, tworzone pliki z podglądem treści). Gdy agent pracuje,
+pole tekstowe zmienia się w „Komentarz": wysłana wiadomość trafia do tego samego procesu (Claude Code w trybie strumieniowym),
+bez restartu i utraty kontekstu. Po głosie aplikacja po ok. 2,5 s mówi „Już się za to biorę". Przełącznik trybu: Zużycie → Dostawcy → Claude Code.
+Odświeżenie strony w trakcie pracy odtwarza kartę pracy.
+
+## Lokalne AI jako agent
+Ollama dostaje narzędzia (komendy, odczyt/zapis plików, listowanie katalogów), więc faktycznie wykonuje zadania, nie tylko czatuje.
+Wymaga modelu z obsługą narzędzi (np. `ollama pull qwen2.5-coder` lub `llama3.1`); model bez narzędzi przechodzi w tryb czatu.
+Uprawnienia wynikają z listy `--allowed` serwera (Bash, Read, Write...).
+
+## Głosy
+Ustawienia → Głos odczytu: głosy neuronowe z serwera (`pip install edge-tts`; Zofia, Marek; działają też na telefonie, wymagają internetu)
+oraz wszystkie głosy przeglądarki/systemu. Tempo i test głosu w tym samym oknie.
+
+## Wtyczki z GitHuba
+Wtyczki → **Odkrywaj (GitHub)**: wyszukiwarka katalogów wtyczek (temat `claude-code-marketplace`, kilkaset repozytoriów) lub wpisz `owner/repo`;
+„Dodaj katalog" pobiera go, a jego wtyczki pojawiają się w **Katalog** (filtr katalogów, wyszukiwarka, instalacja jednym kliknięciem).
+Limit GitHub bez tokenu to 10 zapytań/min; opcjonalny token wpisz na dole zakładki (lub zmienna `GITHUB_TOKEN`).
+
 ## Wtyczki i MCP z poziomu aplikacji
 Przycisk **Wtyczki** w lewym panelu: zainstalowane (włącz/wyłącz/aktualizuj/usuń), katalog z wyszukiwarką (instalacja),
 serwery MCP (lista, dodawanie, usuwanie) i źródła (marketplace). Zmiany działają w nowych rozmowach.
