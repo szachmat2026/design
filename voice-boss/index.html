@@ -1,0 +1,49 @@
+<!doctype html><html lang="pl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Voice Boss</title>
+<style>
+:root{--bg:#0e1116;--fg:#e8eaed;--mut:#8b93a1;--acc:#4ade80;--bad:#f87171;--card:#171b22}
+@media(prefers-color-scheme:light){:root{--bg:#f6f7f9;--fg:#15181d;--mut:#5b6472;--card:#fff}}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px system-ui,sans-serif;display:flex;flex-direction:column;height:100vh}
+header{padding:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+#mic{width:84px;height:84px;border-radius:50%;border:0;font-size:32px;cursor:pointer;background:var(--bad);color:#fff}
+#mic.on{background:var(--acc);color:#000;box-shadow:0 0 0 8px #4ade8033}
+#st{color:var(--mut)} label{color:var(--mut);font-size:14px}
+select,input{background:var(--card);color:var(--fg);border:1px solid #3333;border-radius:6px;padding:4px}
+#log{flex:1;overflow:auto;padding:0 16px 16px;display:flex;flex-direction:column;gap:6px}
+.m{padding:8px 12px;border-radius:10px;background:var(--card);max-width:80ch}
+.u{align-self:flex-end}.b{border-left:3px solid var(--acc)}.t{color:var(--mut);font:13px ui-monospace,monospace}
+</style>
+<header>
+ <button id="mic" title="Spacja">🎙</button>
+ <div><div id="st">wyciszony</div>
+ <label>tryb <select id="mode"><option value="toggle">przełącznik (spacja)</option><option value="ptt">przytrzymaj (spacja)</option></select></label>
+ <label>cisza → odpowiedź <input id="sil" type="number" min="1" max="15" value="4" style="width:3em">s</label>
+ <label><input id="tts" type="checkbox" checked> głos</label></div>
+</header>
+<div id="log"></div>
+<script>
+const T="__TOKEN__",$=id=>document.getElementById(id),log=$("log");
+const add=(c,t)=>{const d=document.createElement("div");d.className="m "+c;d.textContent=t;log.append(d);log.scrollTop=1e9};
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(!SR)add("t","Użyj Chrome lub Edge (brak Web Speech API).");
+let rec,live=false,buf="",timer,busy=false;
+const q=(p,o)=>fetch(p+"?t="+T,o);
+function send(){const s=buf.trim();buf="";if(!s)return;add("u",s);q("/say",{method:"POST",body:JSON.stringify({text:s})})}
+function arm(){clearTimeout(timer);timer=setTimeout(send,($("sil").value||4)*1000)}
+function start(){if(!SR)return;rec=new SR();rec.lang="pl-PL";rec.continuous=true;rec.interimResults=true;
+ rec.onresult=e=>{speechSynthesis.cancel();let fin="";for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)fin+=e.results[i][0].transcript+" ";
+  if(fin)buf+=fin;arm()};
+ rec.onend=()=>{if(live)try{rec.start()}catch(_){}};rec.start();live=true;ui()}
+function stop(){live=false;try{rec.stop()}catch(_){}clearTimeout(timer);send();ui()}
+function ui(){$("mic").classList.toggle("on",live);$("st").textContent=(live?"słucham":"wyciszony")+(busy?" · szef pracuje…":"")}
+$("mic").onclick=()=>live?stop():start();
+addEventListener("keydown",e=>{if(e.code!=="Space"||e.repeat||/INPUT|SELECT/.test(e.target.tagName))return;e.preventDefault();
+ if($("mode").value==="ptt")start();else live?stop():start()});
+addEventListener("keyup",e=>{if(e.code==="Space"&&$("mode").value==="ptt"&&live)stop()});
+const es=new EventSource("/events?t="+T);
+es.onmessage=m=>{const e=JSON.parse(m.data);
+ if(e.type==="status"){busy=e.busy;ui()}
+ else if(e.type==="tool")add("t","▸ "+e.name+": "+e.text);
+ else if(e.type==="log")add("t",e.text);
+ else if(e.type==="reply"){add("b",e.text);if($("tts").checked&&e.text){const u=new SpeechSynthesisUtterance(e.text);u.lang="pl-PL";speechSynthesis.speak(u)}}};
+</script></html>
