@@ -25,6 +25,45 @@ SYS_SCREEN = (" Masz dostęp do ekranu użytkownika: `python {p}/screen.py shot`
               "Steruj: `screen.py click X Y`, `type \"tekst\"`, `key ctrl+c`, `scroll N` (X,Y ze zrzutu). Po każdej akcji zrób "
               "nowy zrzut i sprawdź efekt. Nie wpisuj haseł ani nie potwierdzaj płatności bez wyraźnej zgody.")
 
+try:
+    import psutil
+except Exception:
+    psutil = None
+
+_stats = {"t": 0, "temp": None, "tt": 0}
+
+
+def get_temp():
+    """Temperatura CPU w °C lub None (psutil/Linux, ACPI na Windows - bez admina bywa niedostępne)."""
+    try:
+        if psutil and hasattr(psutil, "sensors_temperatures"):
+            for v in psutil.sensors_temperatures().values():
+                if v: return round(max(x.current for x in v))
+        if os.name == "nt":
+            out = subprocess.run(["powershell", "-NoProfile", "-Command",
+                "(Get-CimInstance -Namespace root/wmi -ClassName MSAcpi_ThermalZone -ErrorAction Stop).CurrentTemperature | Select -First 1"],
+                capture_output=True, text=True, timeout=6).stdout.strip()
+            return round(int(out) / 10 - 273.15) if out else None
+    except Exception:
+        pass
+    return None
+
+
+def stats():
+    now = time.time()
+    if now - _stats["tt"] > 20:   # temperatura odświeżana rzadziej (wolne zapytanie)
+        _stats["tt"] = now
+        threading.Thread(target=lambda: _stats.update(temp=get_temp()), daemon=True).start()
+    d = {"temp": _stats["temp"], "cpu": None, "ram": None, "load": None, "procs": None}
+    if psutil:
+        d["cpu"] = psutil.cpu_percent(interval=None); d["ram"] = psutil.virtual_memory().percent
+        d["procs"] = len(psutil.pids())
+    try: d["load"] = round(os.getloadavg()[0], 2)
+    except Exception:
+        d["load"] = d["cpu"]
+    return d
+
+
 lock = threading.RLock()
 clients, procs, ARGS = [], {}, None
 TOKEN = secrets.token_urlsafe(16)
@@ -199,6 +238,7 @@ class H(BaseHTTPRequestHandler):
             return self.send(404)
         if not self.authed(): return self.send(401, {"error": "login"})
         if path == "/events": return self.sse()
+        if path == "/api/stats": return self.send(200, stats())
         if path == "/api/me": return self.send(200, {"ok": True, **settings()})
         if path == "/api/chats":
             with lock: return self.send(200, sorted((summary(c) for c in CHATS.values()), key=lambda x: -x["updated"]))

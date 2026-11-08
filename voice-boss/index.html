@@ -55,6 +55,27 @@ dialog::backdrop{background:#0008}dialog label{display:block;margin:12px 0 4px;c
 #login form{background:var(--side);border:1px solid var(--line);padding:26px;border-radius:16px;width:min(340px,90vw);display:flex;flex-direction:column;gap:12px;text-align:center}
 #login img{width:56px;margin:0 auto;border-radius:12px}#err{color:var(--bad);font-size:13px;min-height:1em}
 @media(max-width:760px){aside{position:fixed;inset:0 auto 0 0;z-index:5;transform:translateX(-100%)}aside.open{transform:none}#burger{display:inline-block}.m{max-width:96%}}
+
+/* --- v2: dopracowany wygląd --- */
+body{background:radial-gradient(1200px 500px at 70% -10%,color-mix(in srgb,var(--acc) 10%,transparent),transparent),var(--bg)}
+.top{backdrop-filter:blur(8px);background:color-mix(in srgb,var(--bg) 80%,transparent);position:sticky;top:0;z-index:2}
+#stats{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.chip{display:inline-flex;gap:5px;align-items:center;padding:3px 9px;border-radius:999px;background:var(--card);border:1px solid var(--line);font:12px/1.4 ui-monospace,Consolas,monospace;color:var(--mut)}
+.chip b{color:var(--fg);font-weight:600}.chip.hot b{color:var(--bad)}.chip.warm b{color:#fbbf24}
+.m{animation:in .18s ease-out;box-shadow:0 1px 2px #0002}@keyframes in{from{opacity:0;transform:translateY(6px)}}
+.m.user{background:linear-gradient(135deg,var(--acc),color-mix(in srgb,var(--acc) 70%,#38bdf8))}
+.m.assistant{border-left:3px solid var(--acc)}
+.m pre{border:1px solid var(--line)}.cp{position:absolute;top:6px;right:6px;padding:2px 8px;font-size:12px;opacity:.6}.cp:hover{opacity:1}
+.ts{font-size:11px;color:var(--mut);margin:-8px 4px 0;align-self:flex-start}.ts.u{align-self:flex-end}
+#mic.talk{animation:pulse .6s infinite alternate}@keyframes pulse{to{box-shadow:0 0 0 12px #4ade8000;transform:scale(1.08)}}
+#hear{max-width:860px;margin:0 auto 8px;min-height:0;color:var(--mut);font-style:italic;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#hear:empty{display:none}#hear:before{content:"🎙 słyszę: ";font-style:normal;color:var(--acc)}
+.hero{margin:auto;text-align:center;max-width:620px}.hero h2{font-size:28px;margin:.2em 0}.hero p{color:var(--mut)}
+.sug{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:20px}
+.sug button{text-align:left;padding:12px 14px;border-radius:14px;line-height:1.3}.sug button small{display:block;color:var(--mut)}
+.sug button:hover{border-color:var(--acc);transform:translateY(-1px)}button{transition:.15s}
+#in:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 25%,transparent)}
+@media(max-width:760px){#stats .chip:nth-child(n+3){display:none}.hero h2{font-size:22px}}
 </style>
 <div id="login"><form id="lf"><img src="/icon.png" onerror="this.remove()" alt=""><h2 style="margin:0">KADM Studio</h2>
  <input id="pw" type="password" placeholder="Hasło" autocomplete="current-password" required><button class="pri">Zaloguj</button><div id="err"></div></form></div>
@@ -64,9 +85,9 @@ dialog::backdrop{background:#0008}dialog label{display:block;margin:12px 0 4px;c
  <div class="foot"><button id="set" style="flex:1">Ustawienia</button><button id="out" title="Wyloguj">⏻</button></div>
 </aside>
 <main>
- <div class="top"><button id="burger">☰</button><h1 id="title">KADM Studio</h1><button id="stop" class="bad" hidden>STOP</button></div>
+ <div class="top"><button id="burger">☰</button><h1 id="title">KADM Studio</h1><div id="stats"></div><button id="stop" class="bad" hidden>STOP</button></div>
  <div id="msgs"><div class="w" id="w"></div></div>
- <div id="bar"><div class="cmp">
+ <div id="bar"><div id="hear"></div><div class="cmp">
   <button id="mic" title="Mikrofon (Ctrl+Spacja)">🎙</button>
   <textarea id="in" rows="1" placeholder="Napisz polecenie… (Enter wysyła, Shift+Enter nowa linia)"></textarea>
   <button id="send" class="pri">Wyślij</button></div>
@@ -91,15 +112,20 @@ function md(s){const code=[];s=esc(s).replace(/```(?:\w+)?\n?([\s\S]*?)```/g,(_,
  return s.replace(/\u0000(\d+)\u0000/g,(_,i)=>"<pre><code>"+code[i].replace(/\n$/,"")+"</code></pre>")}
 function bubble(m){const w=$("w");
  if(m.role==="assistant"&&m.tools&&m.tools.length){const d=document.createElement("details");d.className="t";d.innerHTML="<summary>▸ "+m.tools.length+" akcji</summary>"+m.tools.map(t=>esc(t.name+": "+t.text)).join("<br>");w.append(d)}
- const d=document.createElement("div");d.className="m "+m.role;d.innerHTML=m.role==="user"?"<p>"+esc(m.text).replace(/\n/g,"<br>")+"</p>":md(m.text);w.append(d)}
+ const d=document.createElement("div");d.className="m "+m.role;d.innerHTML=m.role==="user"?"<p>"+esc(m.text).replace(/\n/g,"<br>")+"</p>":md(m.text);
+ d.querySelectorAll("pre").forEach(p=>{const b=document.createElement("button");b.className="cp";b.textContent="Kopiuj";b.onclick=()=>{navigator.clipboard.writeText(p.innerText.replace(/^Kopiuj\n?/,""));b.textContent="✓";setTimeout(()=>b.textContent="Kopiuj",1200)};p.append(b)});
+ w.append(d);const t=document.createElement("div");t.className="ts"+(m.role==="user"?" u":"");t.textContent=new Date((m.ts||Date.now()/1000)*1000).toLocaleTimeString("pl-PL",{hour:"2-digit",minute:"2-digit"});w.append(t)}
 const down=()=>{const m=$("msgs");m.scrollTop=m.scrollHeight};
 function liveEl(){let e=$("lv");if(!e){e=document.createElement("div");e.id="lv";e.className="live";$("w").append(e)}return e}
 function setBusy(b){$("stop").hidden=!b;$("st").textContent=b?"szef pracuje…":"";if(!b){const e=$("lv");if(e)e.remove()}}
 function renderList(){$("list").innerHTML="";chats.forEach(c=>{const d=document.createElement("div");d.className="ci"+(c.id===cur?" on":"");
  d.innerHTML="<span>"+esc(c.title)+"</span>"+(c.busy?"<i></i>":"")+"<b title='Usuń'>✕</b>";
  d.onclick=e=>{if(e.target.tagName==="B"){if(confirm("Usunąć rozmowę?"))api("/api/chats/"+c.id+"/delete",{}).then(()=>{if(cur===c.id)cur=null;load()});return}open(c.id);$("side").classList.remove("open")};$("list").append(d)})}
-async function load(){chats=await api("/api/chats");if(!cur&&chats[0])cur=chats[0].id;renderList();if(cur&&chats.find(c=>c.id===cur))await open(cur,1);else{cur=null;$("w").innerHTML='<div class="empty"><h2>KADM Studio</h2><p>Napisz lub powiedz, co ma zrobić szef.</p></div>';$("title").textContent="KADM Studio"}}
-async function open(id,keep){cur=id;const c=await api("/api/chats/"+id);$("title").textContent=c.title;$("w").innerHTML="";c.messages.forEach(bubble);setBusy(c.busy);if(c.busy)liveEl().innerHTML='<span class="d">●</span> pracuję…';renderList();down()}
+async function load(){chats=await api("/api/chats");if(!cur&&chats[0])cur=chats[0].id;renderList();if(cur&&chats.find(c=>c.id===cur))await open(cur,1);else{cur=null;hero();$("title").textContent="KADM Studio"}}
+const SUG=[["Stan komputera","Sprawdź CPU, RAM, dysk i największe procesy"],["Ekran","Zrób zrzut ekranu i powiedz, co widzę"],["Porządki","Znajdź największe pliki w Pobranych"],["Telewizor","Sprawdź połączenie ADB z telewizorem"]];
+function hero(){$("w").innerHTML='<div class="hero"><h2>KADM Studio</h2><p>Napisz lub powiedz, co ma zrobić szef. Działa na Twoim komputerze.</p><div class="sug"></div></div>';
+ SUG.forEach(([t,p])=>{const b=document.createElement("button");b.innerHTML="<b>"+t+"</b><small>"+p+"</small>";b.onclick=()=>send(p,false);$("w").querySelector(".sug").append(b)})}
+async function open(id,keep){cur=id;const c=await api("/api/chats/"+id);$("title").textContent=c.title;$("w").innerHTML="";c.messages.length?c.messages.forEach(bubble):hero();setBusy(c.busy);if(c.busy)liveEl().innerHTML='<span class="d">●</span> pracuję…';renderList();down()}
 async function ensure(){if(cur)return;const c=await api("/api/chats",{});cur=c.id;await load()}
 async function send(text,voice){text=text.trim();if(!text)return;await ensure();lastVoice=!!voice;bubble({role:"user",text});setBusy(true);liveEl().innerHTML='<span class="d">●</span> pracuję…';down();
  api("/api/chats/"+cur+"/say",{text,voice:!!voice})}
@@ -112,12 +138,12 @@ addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("stop").hidden)$("stop").
 $("burger").onclick=()=>$("side").classList.toggle("open");
 /* mikrofon */
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-function flush(){const s=buf.trim();buf="";if(s)send(s,true)}
+function flush(){const s=buf.trim();buf="";$("hear").textContent="";if(s)send(s,true)}
 function mic(){if(!SR){alert("Mikrofon: użyj Chrome/Edge (HTTPS lub localhost).");return}
  if(live){live=false;try{rec.stop()}catch(_){}clearTimeout(timer);flush();$("mic").classList.remove("on");return}
  rec=new SR();rec.lang="pl-PL";rec.continuous=true;rec.interimResults=true;
- rec.onresult=e=>{speechSynthesis.cancel();let f="";for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)f+=e.results[i][0].transcript+" ";
-  if(f)buf+=f;clearTimeout(timer);timer=setTimeout(flush,($("sil").value||4)*1000)};
+ rec.onresult=e=>{speechSynthesis.cancel();let f="",im="";for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i];r.isFinal?f+=r[0].transcript+" ":im+=r[0].transcript}
+  if(f)buf+=f;$("hear").textContent=(buf+im).trim();$("mic").classList.add("talk");clearTimeout(window._tk);window._tk=setTimeout(()=>$("mic").classList.remove("talk"),900);clearTimeout(timer);timer=setTimeout(flush,($("sil").value||4)*1000)};
  rec.onend=()=>{if(live)try{rec.start()}catch(_){}};rec.onerror=e=>{if(e.error==="not-allowed"){live=false;$("mic").classList.remove("on");alert("Brak zgody na mikrofon.")}};
  rec.start();live=true;$("mic").classList.add("on")}
 $("mic").onclick=mic;
@@ -138,5 +164,8 @@ $("ok").onclick=async()=>{await api("/api/settings",{screen:$("scr").checked,per
 $("out").onclick=async()=>{await api("/api/logout",{}).catch(()=>{});location.reload()};
 $("lf").onsubmit=async e=>{e.preventDefault();const r=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:$("pw").value})});
  if(r.ok){$("login").style.display="none";init()}else $("err").textContent=(await r.json()).error||"Błąd"};
-async function init(){try{await api("/api/me");await load();sse()}catch(_){}}init();
+function chip(l,v,u,w,hot){return v==null?"":'<span class="chip'+(v>=hot?" hot":v>=w?" warm":"")+'">'+l+' <b>'+v+u+'</b></span>'}
+async function stats(){try{const s=await api("/api/stats");$("stats").innerHTML=chip("🌡",s.temp,"°C",70,85)+chip("CPU",s.cpu,"%",70,90)+chip("RAM",s.ram,"%",75,90)+chip("load",s.load,"",1e9,1e9)+(s.procs!=null?'<span class="chip">proc <b>'+s.procs+'</b></span>':"")}catch(_){}}
+setInterval(stats,3000);
+async function init(){stats();try{await api("/api/me");await load();sse()}catch(_){}}init();
 </script></html>

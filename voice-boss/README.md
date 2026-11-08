@@ -5,7 +5,7 @@ steruje ekranem i odpowiada. Historia rozmów, wiele rozmów naraz, działa też
 
 ## Start (Windows)
 ```powershell
-pip install pyautogui pillow          # tylko dla trybu ekranu / ikony
+pip install pyautogui pillow psutil   # ekran, ikona, statystyki (CPU/RAM/temp)
 python voice-boss\server.py --cwd $HOME --screen --open
 ```
 Wymaga zalogowanego `claude` (wpisz `claude` raz i zaloguj się).
