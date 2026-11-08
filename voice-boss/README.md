@@ -27,7 +27,7 @@ python server.py --cwd $HOME --screen
 Szef robi zrzuty ekranu (`screen.py shot`), czyta je i klika/pisze (`click`, `type`, `key`, `scroll`).
 Przerwanie: przycisk **STOP** / klawisz **Esc** w UI albo ruch myszą w lewy górny róg ekranu.
 
-## Ikonka na pulpicie
+## Ikonka "KADM Studio" na pulpicie (logo z kadm.app)
 ```powershell
 powershell -ExecutionPolicy Bypass -File voice-boss\install-shortcut.ps1 -Screen
 ```
