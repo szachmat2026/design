@@ -33,8 +33,7 @@ def candidates(html, base):
 
 
 def main():
-    img = None
-    local = HERE / "kadm.png"
+    img, local = None, HERE / "kadm-logo.png"      # kadm-logo.png = własny plik użytkownika ma pierwszeństwo
     if local.exists():
         img = Image.open(local)
     else:
@@ -46,9 +45,11 @@ def main():
             try:
                 if u.lower().endswith(".svg"):
                     continue
-                img = Image.open(io.BytesIO(get(u))); print("Logo:", u); break
+                img = Image.open(io.BytesIO(get(u))); print("Logo:", u); img.convert("RGBA").save(local); break
             except Exception:
                 continue
+    if img is None and (HERE / "kadm-fallback.png").exists():
+        img = Image.open(HERE / "kadm-fallback.png"); print("Używam logo zastępczego.")
     if img is None:
         sys.exit(f"Nie znalazłem logo. Wrzuć je jako {local}.")
     img = img.convert("RGBA")

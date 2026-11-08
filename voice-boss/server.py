@@ -369,8 +369,8 @@ class H(BaseHTTPRequestHandler):
                                    "background_color": "#0e1116", "theme_color": "#0e1116",
                                    "icons": [{"src": BASE + "/icon.png", "sizes": "any", "type": "image/png"}]}, "application/manifest+json")
         if path == "/icon.png":
-            f = HERE / "kadm.png"
-            if f.exists(): return self.send(200, f.read_bytes(), "image/png")
+            for n in ("kadm-logo.png", "kadm-fallback.png"):
+                if (HERE / n).exists(): return self.send(200, (HERE / n).read_bytes(), "image/png")
             return self.send(404)
         if path == "/api/auth": return self.send(200, {"totp": bool(CFG.get("totp"))})
         if not self.authed(): return self.send(401, {"error": "login"})

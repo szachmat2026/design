@@ -75,7 +75,7 @@ Przycisk **Wtyczki** w lewym panelu: zainstalowane (włącz/wyłącz/aktualizuj/
 serwery MCP (lista, dodawanie, usuwanie) i źródła (marketplace). Zmiany działają w nowych rozmowach.
 
 ## Wygląd
-Kolory i czcionka to zmienne CSS na górze `index.html` (`--acc`, `--bg`...). Logo: `python voice-boss\make_icon.py`
+Kolory i czcionka to zmienne CSS na górze `index.html` (`--acc`, `--bg`...). Logo: `python voice-boss\make_icon.py` (zapisze kadm-logo.png i kadm.ico; własny plik wrzuć jako `kadm-logo.png`)
 pobiera je z kadm.app (lub wrzuć `voice-boss\kadm.png`).
 
 ## Uwaga
