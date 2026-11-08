@@ -18,3 +18,11 @@ Otwórz wypisany link w Chrome/Edge. Wymagany zalogowany `claude` w PATH.
 ## Bezpieczeństwo
 Szef wykonuje komendy (Bash/Edit/Write) bez pytania. Serwer słucha tylko na 127.0.0.1
 i wymaga losowego tokenu z linku. Zawęź uprawnienia: `--allowed Read Glob Grep`.
+
+## Sterowanie ekranem (opcjonalne)
+```powershell
+pip install pyautogui pillow
+python server.py --cwd $HOME --screen
+```
+Szef robi zrzuty ekranu (`screen.py shot`), czyta je i klika/pisze (`click`, `type`, `key`, `scroll`).
+Przerwanie: przycisk **STOP** / klawisz **Esc** w UI albo ruch myszą w lewy górny róg ekranu.

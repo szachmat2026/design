@@ -18,6 +18,7 @@ select,input{background:var(--card);color:var(--fg);border:1px solid #3333;borde
  <div><div id="st">wyciszony</div>
  <label>tryb <select id="mode"><option value="toggle">przełącznik (spacja)</option><option value="ptt">przytrzymaj (spacja)</option></select></label>
  <label>cisza → odpowiedź <input id="sil" type="number" min="1" max="15" value="4" style="width:3em">s</label>
+ <button id="stop" style="background:var(--bad);color:#fff;border:0;border-radius:6px;padding:6px 12px;cursor:pointer">STOP</button>
  <label><input id="tts" type="checkbox" checked> głos</label></div>
 </header>
 <div id="log"></div>
@@ -36,6 +37,8 @@ function start(){if(!SR)return;rec=new SR();rec.lang="pl-PL";rec.continuous=true
  rec.onend=()=>{if(live)try{rec.start()}catch(_){}};rec.start();live=true;ui()}
 function stop(){live=false;try{rec.stop()}catch(_){}clearTimeout(timer);send();ui()}
 function ui(){$("mic").classList.toggle("on",live);$("st").textContent=(live?"słucham":"wyciszony")+(busy?" · szef pracuje…":"")}
+$("stop").onclick=()=>{speechSynthesis.cancel();q("/stop",{method:"POST",body:"{}"})};
+addEventListener("keydown",e=>{if(e.code==="Escape")$("stop").click()});
 $("mic").onclick=()=>live?stop():start();
 addEventListener("keydown",e=>{if(e.code!=="Space"||e.repeat||/INPUT|SELECT/.test(e.target.tagName))return;e.preventDefault();
  if($("mode").value==="ptt")start();else live?stop():start()});

@@ -17,7 +17,14 @@ SYSTEM = (
     "czymś nieodwracalnym. Na końcu powiedz tylko kluczowy wynik."
 )
 
-state = {"session": None, "busy": False, "pending": [], "clients": []}
+SCREEN_HINT = (
+    " Masz dostęp do ekranu użytkownika: uruchom `python {path}/screen.py shot`, potem Read na wypisanym pliku PNG, "
+    "aby zobaczyć ekran. Steruj przez `screen.py click X Y`, `type \"tekst\"`, `key ctrl+c`, `scroll N` "
+    "(X,Y ze zrzutu). Po każdej akcji zrób nowy zrzut i sprawdź efekt. Nie wpisuj haseł ani nie potwierdzaj płatności "
+    "bez wyraźnej zgody użytkownika. Użytkownik w każdej chwili może przerwać (STOP)."
+)
+
+state = {"proc": None, "session": None, "busy": False, "pending": [], "clients": []}
 lock = threading.Lock()
 TOKEN = secrets.token_urlsafe(16)
 ARGS = None
@@ -32,7 +39,8 @@ def broadcast(ev):
 
 def run_job(text):
     cmd = [shutil.which("claude") or "claude", "-p", text, "--output-format", "stream-json",
-           "--verbose", "--append-system-prompt", SYSTEM,
+           "--verbose", "--append-system-prompt",
+           SYSTEM + (SCREEN_HINT.format(path=str(HERE)) if ARGS.screen else ""),
            "--permission-mode", ARGS.permission]
     if ARGS.allowed:
         cmd += ["--allowedTools", *ARGS.allowed]
@@ -42,6 +50,7 @@ def run_job(text):
     try:
         p = subprocess.Popen(cmd, cwd=ARGS.cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                              text=True, encoding="utf-8", errors="replace")
+        state["proc"] = p
         for line in p.stdout:
             try:
                 ev = json.loads(line)
@@ -122,6 +131,11 @@ class H(BaseHTTPRequestHandler):
         data = json.loads(self.rfile.read(n) or b"{}")
         if self.path.startswith("/say"):
             r = submit(data.get("text", "").strip()) if data.get("text", "").strip() else "empty"
+        elif self.path.startswith("/stop"):
+            with lock: state["pending"].clear()
+            p = state.get("proc")
+            if p and p.poll() is None: p.kill()
+            r = "stopped"
         elif self.path.startswith("/reset"):
             state["session"] = None; r = "reset"
         else:
@@ -135,6 +149,7 @@ if __name__ == "__main__":
     ap.add_argument("--port", type=int, default=8765)
     ap.add_argument("--permission", default="acceptEdits")
     ap.add_argument("--allowed", nargs="*", default=["Bash", "Read", "Edit", "Write", "Glob", "Grep"])
+    ap.add_argument("--screen", action="store_true", help="daj szefowi widok ekranu i mysz/klawiaturę (screen.py)")
     ARGS = ap.parse_args()
     srv = ThreadingHTTPServer(("127.0.0.1", ARGS.port), H)
     print(f"Otwórz w Chrome/Edge:  http://127.0.0.1:{ARGS.port}/?t={TOKEN}\nKatalog szefa: {ARGS.cwd}")
