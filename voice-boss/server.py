@@ -149,8 +149,11 @@ if __name__ == "__main__":
     ap.add_argument("--port", type=int, default=8765)
     ap.add_argument("--permission", default="acceptEdits")
     ap.add_argument("--allowed", nargs="*", default=["Bash", "Read", "Edit", "Write", "Glob", "Grep"])
+    ap.add_argument("--open", action="store_true", help="otwórz przeglądarkę po starcie")
     ap.add_argument("--screen", action="store_true", help="daj szefowi widok ekranu i mysz/klawiaturę (screen.py)")
     ARGS = ap.parse_args()
     srv = ThreadingHTTPServer(("127.0.0.1", ARGS.port), H)
     print(f"Otwórz w Chrome/Edge:  http://127.0.0.1:{ARGS.port}/?t={TOKEN}\nKatalog szefa: {ARGS.cwd}")
+    if ARGS.open:
+        import webbrowser; threading.Timer(1, webbrowser.open, [f"http://127.0.0.1:{ARGS.port}/?t={TOKEN}"]).start()
     srv.serve_forever()

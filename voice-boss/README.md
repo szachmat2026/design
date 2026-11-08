@@ -26,3 +26,10 @@ python server.py --cwd $HOME --screen
 ```
 Szef robi zrzuty ekranu (`screen.py shot`), czyta je i klika/pisze (`click`, `type`, `key`, `scroll`).
 Przerwanie: przycisk **STOP** / klawisz **Esc** w UI albo ruch myszą w lewy górny róg ekranu.
+
+## Ikonka na pulpicie
+```powershell
+powershell -ExecutionPolicy Bypass -File voice-boss\install-shortcut.ps1 -Screen
+```
+Dodaj `-Autostart`, by szef startował razem z Windows. Kliknięcie ikonki uruchamia serwer
+(zminimalizowane okno) i otwiera przeglądarkę. Zamknięcie tego okna wyłącza szefa.
