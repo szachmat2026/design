@@ -7,7 +7,7 @@
 
 Wymaga zalogowanego `claude` (Claude Code CLI). Tylko stdlib.
 """
-import argparse, getpass, hashlib, hmac, json, os, queue, secrets, shutil, subprocess, sys, threading, time, uuid
+import argparse, getpass, shlex, hashlib, hmac, json, os, queue, secrets, shutil, subprocess, sys, threading, time, uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
@@ -54,7 +54,7 @@ def stats():
     if now - _stats["tt"] > 20:   # temperatura odświeżana rzadziej (wolne zapytanie)
         _stats["tt"] = now
         threading.Thread(target=lambda: _stats.update(temp=get_temp()), daemon=True).start()
-    d = {"temp": _stats["temp"], "cpu": None, "ram": None, "load": None, "procs": None}
+    d = {"tok": USAGE.tokens(), "usd": USAGE.usd(), "temp": _stats["temp"], "cpu": None, "ram": None, "load": None, "procs": None}
     if psutil:
         d["cpu"] = psutil.cpu_percent(interval=None); d["ram"] = psutil.virtual_memory().percent
         d["procs"] = len(psutil.pids())
@@ -65,6 +65,7 @@ def stats():
 
 
 import base64, re, struct
+import providers as P
 
 
 def totp(secret, t=None, step=30):
@@ -146,6 +147,7 @@ def jsave(p, o):
 
 
 CFG = jload(CFG_F, {})
+USAGE = P.Usage(DATA / "usage.json")
 CHATS = jload(CHATS_F, {})
 SESS = jload(SESS_F, {})   # sha256(token) -> expiry
 
@@ -191,7 +193,9 @@ def settings():
 
 
 def summary(c):
-    return {"id": c["id"], "title": c["title"], "updated": c["updated"], "busy": c.get("busy", False), "cwd": c["cwd"]}
+    tok = sum((m.get("usage") or {}).get("in", 0) + (m.get("usage") or {}).get("out", 0) for m in c["messages"])
+    return {"id": c["id"], "title": c["title"], "updated": c["updated"], "busy": c.get("busy", False), "cwd": c["cwd"],
+            "provider": c.get("provider", "auto"), "tokens": tok}
 
 
 def add_msg(c, m):
@@ -204,40 +208,39 @@ def add_msg(c, m):
 def run_job(c, text, mode):
     st = settings()
     sysm = SYS_BASE + (SYS_VOICE if mode == "voice" else SYS_TEXT) + (SYS_SCREEN.format(p=str(HERE)) if st["screen"] else "")
-    cmd = [shutil.which("claude") or "claude", "-p", text, "--output-format", "stream-json", "--verbose",
-           "--append-system-prompt", sysm, "--permission-mode", st["permission"]]
-    if ARGS.allowed: cmd += ["--allowedTools", *ARGS.allowed]
-    if c.get("session"): cmd += ["--resume", c["session"]]
+    cwd = c["cwd"] if Path(c["cwd"]).is_dir() else None
     c["busy"] = True; broadcast({"type": "busy", "chat": c["id"], "busy": True})
-    tools, reply = [], None
+    hist = [{"role": m["role"], "text": m["text"]} for m in c["messages"][:-1] if m.get("text")]
+    tools, tried, res = [], [], None
+
+    def tool(name, txt):
+        d = {"name": name, "text": txt}; tools.append(d); broadcast({"type": "tool", "chat": c["id"], **d})
+
+    def register(p): procs[c["id"]] = p
+
+    ctx = {"text": text, "sysm": sysm, "sysm_plain": SYS_BASE + " Nie masz dostępu do narzędzi ani plików: odpowiadaj tekstem." + (SYS_VOICE if mode == "voice" else SYS_TEXT),
+           "permission": st["permission"], "allowed": ARGS.allowed, "cwd": cwd, "session": c.get("session"), "history": hist,
+           "tool": tool, "register": register}
     try:
-        p = subprocess.Popen(cmd, cwd=c["cwd"] if Path(c["cwd"]).is_dir() else None, stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace")
-        procs[c["id"]] = p
-        for line in p.stdout:
-            try: ev = json.loads(line)
-            except ValueError:
-                if line.strip(): reply = (reply or "") + line.strip() + "\n"
-                continue
-            if ev.get("session_id"): c["session"] = ev["session_id"]
-            t = ev.get("type")
-            if t == "assistant":
-                for b in ev.get("message", {}).get("content", []):
-                    if b.get("type") == "tool_use":
-                        inp = b.get("input", {})
-                        d = {"name": b.get("name"), "text": str(inp.get("command") or inp.get("file_path") or inp.get("description") or inp.get("pattern") or "")[:300]}
-                        tools.append(d); broadcast({"type": "tool", "chat": c["id"], **d})
-            elif t == "result":
-                reply = ev.get("result", "") or reply
-        rc = p.wait()
-        if rc and rc < 0: reply = (reply or "") + "\n(przerwano)"
-    except FileNotFoundError:
-        reply = "Nie znajduję polecenia `claude`. Zainstaluj Claude Code i zaloguj się (`claude`)."
+        for pid in P.order(CFG, USAGE, c.get("provider", "auto")):
+            res = P.run(pid, CFG, ctx); tried.append(pid)
+            if res.get("session") and pid == "claude": c["session"] = res["session"]
+            if res.get("error") == "limit":
+                CFG.setdefault("cooldown", {})[pid] = time.time() + P.COOLDOWN; jsave(CFG_F, CFG)
+                if c.get("provider", "auto") == "auto":
+                    tool("limit", f"{pid}: limit - przełączam na następnego dostawcę"); continue
+            break
     except Exception as e:  # noqa
-        reply = f"Błąd: {e}"
+        res = {"reply": f"Błąd: {e}", "usage": {}, "provider": None}
     finally:
         procs.pop(c["id"], None)
-    m = {"role": "assistant", "text": (reply or "(brak odpowiedzi)").strip(), "tools": tools, "mode": mode}
+    if res is None:
+        res = {"reply": "Brak dostępnego dostawcy AI (limity, budżet lub wyłączeni). Zmień dostawcę lub limity w „Zużycie”.", "usage": {}, "provider": None}
+    u = res.get("usage") or {}
+    if res.get("provider"):
+        USAGE.add(chat=c["id"], provider=res["provider"], **{k: u.get(k, 0) for k in ("in", "out", "cache")}, usd=u.get("usd"), est=bool(u.get("est")))
+    m = {"role": "assistant", "text": (res.get("reply") or "(brak odpowiedzi)").strip(), "tools": tools, "mode": mode,
+         "provider": res.get("provider"), "usage": u, "fallback": tried[:-1], "error": res.get("error")}
     add_msg(c, m); broadcast({"type": "msg", "chat": c["id"], "msg": m})
     with lock:
         nxt = c.pop("pending", [])
@@ -319,6 +322,8 @@ class H(BaseHTTPRequestHandler):
         if path == "/api/auth": return self.send(200, {"totp": bool(CFG.get("totp"))})
         if not self.authed(): return self.send(401, {"error": "login"})
         if path == "/events": return self.sse()
+        if path == "/api/usage": return self.send(200, USAGE.view(P.merged(CFG)))
+        if path == "/api/providers": return self.send(200, P.status(CFG, USAGE))
         if path == "/api/plugins":
             return self.send(200, plugins_view(parse_qs(urlparse(self.path).query).get("q", [""])[0]))
         if path == "/api/mcp": return self.send(200, mcp_view())
@@ -364,6 +369,39 @@ class H(BaseHTTPRequestHandler):
         if path == "/api/logout":
             with lock: SESS.pop(hashlib.sha256((self.cookie() or "").encode()).hexdigest(), None); jsave(SESS_F, SESS)
             return self.send(200, {"ok": True}, extra=[("Set-Cookie", f"vb=; Max-Age=0; Path={BASE or '/'}")])
+        if path == "/api/stopall":
+            for c in CHATS.values():
+                c.pop("pending", None)
+                p = procs.get(c["id"])
+                if p and p.poll() is None: p.kill()
+            return self.send(200, {"ok": True})
+        if path == "/api/providers/save":
+            pid = d.get("id")
+            if pid not in P.DEFAULTS: return self.send(400)
+            cur = CFG.setdefault("providers", {}).setdefault(pid, {})
+            for k, v in d.items():
+                if k not in P.EDITABLE: continue
+                if k in ("cmd", "args") and isinstance(v, str): v = shlex.split(v, posix=(os.name != "nt"))
+                if k in ("cmd", "args") and not (isinstance(v, list) and all(isinstance(x, str) for x in v)): return self.send(400)
+                if k in ("enabled", "free", "stdin"): v = bool(v)
+                elif k == "wake_timeout": v = max(10, min(900, int(v or 150)))
+                elif k not in ("cmd", "args"): v = str(v)[:300]
+                cur[k] = v
+            jsave(CFG_F, CFG); return self.send(200, P.status(CFG, USAGE))
+        if path == "/api/providers/test":
+            ok, msg = P.test(d.get("id"), CFG) if d.get("id") in P.DEFAULTS else (False, "?"); return self.send(200, {"ok": ok, "out": msg})
+        if path == "/api/providers/reset-cooldown":
+            CFG.pop("cooldown", None); jsave(CFG_F, CFG); return self.send(200, P.status(CFG, USAGE))
+        if path == "/api/chain":
+            ch = [x for x in d.get("chain", []) if x in P.DEFAULTS]
+            CFG["chain"] = list(dict.fromkeys(ch)) or P.DEFAULT_CHAIN; jsave(CFG_F, CFG); return self.send(200, P.status(CFG, USAGE))
+        if path == "/api/budget":
+            def num(v, f=int):
+                try: return max(0, f(float(v)))
+                except (TypeError, ValueError): return 0
+            CFG["budget"] = {"daily_tokens": num(d.get("daily_tokens")), "daily_usd": num(d.get("daily_usd"), float),
+                             "per_provider": {k: num(v) for k, v in (d.get("per_provider") or {}).items() if k in P.DEFAULTS and num(v)}}
+            jsave(CFG_F, CFG); return self.send(200, P.status(CFG, USAGE))
         if path == "/api/plugins/do":
             act, pid = d.get("action"), str(d.get("id", ""))
             if act not in ("install", "uninstall", "enable", "disable", "update") or not SAFE.match(pid): return self.send(400)
@@ -388,7 +426,7 @@ class H(BaseHTTPRequestHandler):
             jsave(CFG_F, CFG); return self.send(200, settings())
         if path == "/api/chats":
             cwd = str(d.get("cwd") or ARGS.cwd)
-            c = {"id": uuid.uuid4().hex[:10], "title": "Nowa rozmowa", "cwd": cwd, "session": None, "messages": [], "updated": time.time()}
+            c = {"id": uuid.uuid4().hex[:10], "title": "Nowa rozmowa", "cwd": cwd, "session": None, "provider": "auto", "messages": [], "updated": time.time()}
             with lock: CHATS[c["id"]] = c
             save_chats(); broadcast({"type": "chats"}); return self.send(200, summary(c))
         parts = path.split("/")
@@ -399,6 +437,10 @@ class H(BaseHTTPRequestHandler):
                 if not text: return self.send(400)
                 m, r = say(c, text[:20000], "voice" if d.get("voice") else "text")
                 return self.send(200, {"status": r, "msg": m})
+            if act == "provider":
+                v = d.get("provider", "auto")
+                if v != "auto" and v not in P.DEFAULTS: return self.send(400)
+                c["provider"] = v; save_chats(); broadcast({"type": "chats"}); return self.send(200, {"ok": True})
             if act == "stop":
                 with lock: c.pop("pending", None)
                 p = procs.get(c["id"])

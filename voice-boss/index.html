@@ -105,23 +105,30 @@ dialog,#login form{border-radius:10px}#login .logo{display:block}
 .sug button b{font-size:17px;letter-spacing:-.02em}.sug button:hover{border-color:var(--fg);transform:none}
 .art .k{fill:#1b2a21}@media(prefers-color-scheme:dark){:root:not([data-theme=light]) .art .k{fill:#3a5443}}:root[data-theme=dark] .art .k{fill:#3a5443}
 @media(max-width:760px){.hero{grid-template-columns:1fr;gap:18px}.art{max-height:200px}}
-dialog#pdlg{width:min(760px,96vw);max-height:86vh;padding:0;overflow:hidden}#pdlg[open]{display:flex;flex-direction:column}
+dialog#pdlg,dialog#udlg{width:min(760px,96vw);max-height:86vh;padding:0;overflow:hidden}#pdlg[open],#udlg[open]{display:flex;flex-direction:column}
 .ph{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 6px}.ph h3{margin:0;letter-spacing:-.02em}
-.tabs{display:flex;gap:4px;padding:0 12px 8px;border-bottom:1px solid var(--line);overflow:auto}.tabs button{border:0;background:none;color:var(--mut);border-radius:6px;white-space:nowrap}.tabs button.on{background:var(--sage);color:var(--fg)}
-#pq{margin:10px 16px 0;width:calc(100% - 32px)}#pbody{overflow:auto;padding:8px 16px;flex:1;min-height:200px}
+.tabs{display:flex;gap:4px;padding:4px 12px 8px;border-bottom:1px solid var(--line);overflow:auto}.tabs button{border:0;background:none;color:var(--mut);border-radius:6px;white-space:nowrap}.tabs button.on{background:var(--sage);color:var(--fg)}
+#pq{margin:10px 16px 0;width:calc(100% - 32px)}#pbody,#ubody{overflow:auto;padding:8px 16px;flex:1;min-height:200px}
 .pr{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}.pr .i{flex:1;min-width:0}.pr .i b{display:block;overflow:hidden;text-overflow:ellipsis}.pr .i small{color:var(--mut);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pr button{padding:5px 10px;font-size:13px}.tag{font-size:11px;border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--mut)}.tag.on{background:var(--acc);color:var(--accfg);border-color:transparent}
-#pmsg{padding:8px 16px 12px;color:var(--mut);font-size:12px;white-space:pre-wrap;max-height:90px;overflow:auto}.add{display:flex;gap:8px;margin:10px 0}.add input{flex:1}
+#pmsg,#umsg{padding:8px 16px 12px;color:var(--mut);font-size:12px;white-space:pre-wrap;max-height:90px;overflow:auto}.add{display:flex;gap:8px;margin:10px 0}.add input{flex:1}
+.card{border:1px solid var(--line);border-radius:8px;padding:14px;margin:10px 0;background:var(--card)}.card .big{font-size:30px;font-weight:600;letter-spacing:-.03em}.card small,.mut{color:var(--mut)}
+.bar{height:8px;border-radius:4px;background:var(--sage);overflow:hidden;margin:8px 0}.bar i{display:block;height:100%;background:var(--green)}.bar.hot i{background:var(--bad)}
+.bars{display:flex;align-items:flex-end;gap:4px;height:90px;margin-top:8px}.bars div{flex:1;background:var(--green);border-radius:3px 3px 0 0;min-height:2px;opacity:.85}.bars div.today{background:var(--fg)}
+.f{display:grid;grid-template-columns:110px 1fr;gap:6px 10px;align-items:center;margin:8px 0;font-size:13px}.f label{color:var(--mut)}
+.row2{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.pt{font-size:11px;color:var(--mut);border:1px solid var(--line);border-radius:4px;padding:0 5px;margin-left:4px;font-weight:400}
+.tk{cursor:pointer}#prov{max-width:150px;padding:5px 8px;font-size:13px}table.t{width:100%;border-collapse:collapse;font-size:13px}table.t td{padding:6px 4px;border-bottom:1px solid var(--line)}
+@media(max-width:760px){#prov{max-width:110px}.f{grid-template-columns:1fr}}
 </style>
 <div id="login"><form id="lf"><svg class="logo" viewBox="0 0 44 44" aria-hidden="true"><rect width="44" height="44" rx="10" fill="#1b2a21"/><rect x="11" y="9" width="6.5" height="26" rx="1.5" fill="#c6f26b"/><path d="M17.5 24v-6L30 9l4 5zM17.5 23l7-2 10 9.5-4 4.5z" fill="#c6f26b"/></svg><h2 style="margin:0">kadm <small style="font-weight:400;color:var(--mut);font-size:.6em">studio</small></h2>
  <input id="pw" type="password" placeholder="Hasło" autocomplete="current-password" required><input id="code" inputmode="numeric" maxlength="6" placeholder="Kod z aplikacji (2FA)" autocomplete="one-time-code" hidden><button class="pri">Zaloguj</button><div id="err"></div></form></div>
 <aside id="side">
  <div class="brand"><svg class="logo" viewBox="0 0 44 44" aria-hidden="true"><rect width="44" height="44" rx="10" fill="#1b2a21"/><rect x="11" y="9" width="6.5" height="26" rx="1.5" fill="#c6f26b"/><path d="M17.5 24v-6L30 9l4 5zM17.5 23l7-2 10 9.5-4 4.5z" fill="#c6f26b"/></svg><span>kadm</span><small>studio</small></div>
  <button id="new" class="pri">+ Nowa rozmowa</button><div id="list"></div>
- <div class="foot"><button id="plg" style="flex:1">Wtyczki</button><button id="set" style="flex:1">Ustawienia</button><button id="out" title="Wyloguj">⏻</button></div>
+ <div class="foot"><button id="usg" style="flex:1">Zużycie</button><button id="plg" style="flex:1">Wtyczki</button><button id="set" title="Ustawienia">⚙</button><button id="out" title="Wyloguj">⏻</button></div>
 </aside>
 <main>
- <div class="top"><button id="burger">☰</button><h1 id="title">KADM Studio</h1><div id="stats"></div><button id="stop" class="bad" hidden>STOP</button></div>
+ <div class="top"><button id="burger">☰</button><h1 id="title">KADM Studio</h1><select id="prov" hidden title="Dostawca AI dla tej rozmowy"></select><div id="stats"></div><button id="stop" class="bad" hidden>STOP</button></div>
  <div id="msgs"><div class="w" id="w"></div></div>
  <div id="bar"><div id="hear"></div><div class="cmp">
   <button id="mic" title="Mikrofon (Ctrl+Spacja)">🎙</button>
@@ -130,6 +137,9 @@ dialog#pdlg{width:min(760px,96vw);max-height:86vh;padding:0;overflow:hidden}#pdl
   <div class="opts"><label><input id="tts" type="checkbox" checked> czytaj odpowiedzi na głos po mowie</label>
   <label>cisza → wyślij <input id="sil" type="number" min="1" max="15" value="4">s</label><span id="st"></span></div></div>
 </main>
+<dialog id="udlg"><div class="ph"><h3>Zużycie i dostawcy AI</h3><button id="ux">✕</button></div>
+ <div class="tabs"><button data-t="use" class="on">Zużycie</button><button data-t="prov">Dostawcy</button><button data-t="lim">Limity</button><button data-t="act">Rozmowy</button></div>
+ <div id="ubody"></div><div id="umsg"></div></dialog>
 <dialog id="pdlg"><div class="ph"><h3>Wtyczki i MCP</h3><button id="px">✕</button></div>
  <div class="tabs"><button data-t="inst" class="on">Zainstalowane</button><button data-t="cat">Katalog</button><button data-t="mcp">MCP</button><button data-t="mk">Źródła</button></div>
  <input id="pq" placeholder="Szukaj w katalogu…" hidden><div id="pbody"></div><div id="pmsg"></div></dialog>
@@ -140,7 +150,7 @@ dialog#pdlg{width:min(760px,96vw);max-height:86vh;padding:0;overflow:hidden}#pdl
  <label>Motyw</label><select id="theme"><option value="">Systemowy</option><option value="dark">Ciemny</option><option value="light">Jasny</option></select>
  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px"><button id="x">Anuluj</button><button id="ok" class="pri">Zapisz</button></div></dialog>
 <script>
-const $=id=>document.getElementById(id);let cur=null,chats=[],busy={},live=false,rec,buf="",timer,lastVoice=false,S={};
+const $=id=>document.getElementById(id);const fmt=n=>n>=1e6?(n/1e6).toFixed(1)+"M":n>=1e3?(n/1e3).toFixed(1)+"k":String(n||0);const PN={claude:"Claude",codex:"Codex",ollama:"Lokalne AI",custom:"Własne CLI"};let cur=null,chats=[],busy={},live=false,rec,buf="",timer,lastVoice=false,S={};
 const api=async(p,b,m)=>{const r=await fetch(p.replace(/^\//,""),{method:b===undefined?"GET":"POST",headers:{"Content-Type":"application/json"},body:b===undefined?undefined:JSON.stringify(b)});
  if(r.status===401){$("login").style.display="flex";throw 0}return r.json()};
 const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -153,19 +163,19 @@ function bubble(m){const w=$("w");
  if(m.role==="assistant"&&m.tools&&m.tools.length){const d=document.createElement("details");d.className="t";d.innerHTML="<summary>▸ "+m.tools.length+" akcji</summary>"+m.tools.map(t=>esc(t.name+": "+t.text)).join("<br>");w.append(d)}
  const d=document.createElement("div");d.className="m "+m.role;d.innerHTML=m.role==="user"?"<p>"+esc(m.text).replace(/\n/g,"<br>")+"</p>":md(m.text);
  d.querySelectorAll("pre").forEach(p=>{const b=document.createElement("button");b.className="cp";b.textContent="Kopiuj";b.onclick=()=>{navigator.clipboard.writeText(p.innerText.replace(/^Kopiuj\n?/,""));b.textContent="✓";setTimeout(()=>b.textContent="Kopiuj",1200)};p.append(b)});
- w.append(d);const t=document.createElement("div");t.className="ts"+(m.role==="user"?" u":"");t.textContent=new Date((m.ts||Date.now()/1000)*1000).toLocaleTimeString("pl-PL",{hour:"2-digit",minute:"2-digit"});w.append(t)}
+ w.append(d);const t=document.createElement("div");t.className="ts"+(m.role==="user"?" u":"");t.textContent=new Date((m.ts||Date.now()/1000)*1000).toLocaleTimeString("pl-PL",{hour:"2-digit",minute:"2-digit"})+(m.role==="assistant"&&m.provider?" · "+PN[m.provider]+(m.usage&&(m.usage.in||m.usage.out)?" · "+fmt((m.usage.in||0)+(m.usage.out||0))+(m.usage.est?" tok (szac.)":" tok"):"")+(m.fallback&&m.fallback.length?" · po limicie: "+m.fallback.map(x=>PN[x]).join(", "):""):"");w.append(t)}
 const down=()=>{const m=$("msgs");m.scrollTop=m.scrollHeight};
 function liveEl(){let e=$("lv");if(!e){e=document.createElement("div");e.id="lv";e.className="live";$("w").append(e)}return e}
 function setBusy(b){$("stop").hidden=!b;$("st").textContent=b?"szef pracuje…":"";if(!b){const e=$("lv");if(e)e.remove()}}
 function renderList(){$("list").innerHTML="";chats.forEach(c=>{const d=document.createElement("div");d.className="ci"+(c.id===cur?" on":"");
- d.innerHTML="<span>"+esc(c.title)+"</span>"+(c.busy?"<i></i>":"")+"<b title='Usuń'>✕</b>";
+ d.innerHTML="<span>"+esc(c.title)+"</span>"+(c.provider&&c.provider!=="auto"?'<small class="pt">'+PN[c.provider]+"</small>":"")+(c.tokens?'<small class="pt">'+fmt(c.tokens)+"</small>":"")+(c.busy?"<i></i>":"")+"<b title='Usuń'>✕</b>";
  d.onclick=e=>{if(e.target.tagName==="B"){if(confirm("Usunąć rozmowę?"))api("/api/chats/"+c.id+"/delete",{}).then(()=>{if(cur===c.id)cur=null;load()});return}open(c.id);$("side").classList.remove("open")};$("list").append(d)})}
-async function load(){chats=await api("/api/chats");if(!cur&&chats[0])cur=chats[0].id;renderList();if(cur&&chats.find(c=>c.id===cur))await open(cur,1);else{cur=null;hero();$("title").textContent="kadm studio"}}
+async function load(){chats=await api("/api/chats");if(!cur&&chats[0])cur=chats[0].id;renderList();if(cur&&chats.find(c=>c.id===cur))await open(cur,1);else{cur=null;hero();$("prov").hidden=true;$("title").textContent="kadm studio"}}
 const SUG=[["A / 01","Stan komputera","Sprawdź CPU, RAM, dysk i największe procesy"],["B / 02","Ekran","Zrób zrzut ekranu i powiedz, co widzę"],["C / 03","Porządki","Znajdź największe pliki w Pobranych"],["D / 04","Telewizor","Sprawdź połączenie ADB z telewizorem"]];
 const ART=`<svg viewBox="0 0 360 300" class="art" aria-hidden="true"><defs><pattern id="g" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0V30" fill="none" stroke="currentColor" stroke-opacity=".08"/></pattern><filter id="sh" x="-20%" y="-20%" width="150%" height="150%"><feDropShadow dx="6" dy="10" stdDeviation="9" flood-opacity=".22"/></filter></defs><rect width="360" height="300" fill="url(#g)"/><polygon class="k" points="95,92 168,78 168,262 95,276"/><g filter="url(#sh)"><polygon points="168,150 232,70 290,118 226,198" fill="#c6f26b"/><polygon points="170,212 226,166 294,236 234,284" fill="#879a6f"/></g></svg>`;
 function hero(){$("w").innerHTML='<div class="hero"><div><span class="pill"><i></i>Twój agent na komputerze</span><h2>Powiedz, co zrobić.<br>Szef to zrobi.</h2><p>Pisz albo mów. Agent wykonuje komendy, edytuje pliki i steruje ekranem na Twoim komputerze.</p></div>'+ART+'</div><div class="sug"></div>';
  SUG.forEach(([n,t,p])=>{const b=document.createElement("button");b.innerHTML="<em>"+n+"</em><b>"+t+"</b><small>"+p+"</small>";b.onclick=()=>send(p,false);$("w").querySelector(".sug").append(b)})}
-async function open(id,keep){cur=id;const c=await api("/api/chats/"+id);$("title").textContent=c.title;$("w").innerHTML="";c.messages.length?c.messages.forEach(bubble):hero();setBusy(c.busy);if(c.busy)liveEl().innerHTML='<span class="d">●</span> pracuję…';renderList();down()}
+async function open(id,keep){cur=id;const c=await api("/api/chats/"+id);$("title").textContent=c.title;$("prov").hidden=false;$("prov").value=c.provider||"auto";$("w").innerHTML="";c.messages.length?c.messages.forEach(bubble):hero();setBusy(c.busy);if(c.busy)liveEl().innerHTML='<span class="d">●</span> pracuję…';renderList();down()}
 async function ensure(){if(cur)return;const c=await api("/api/chats",{});cur=c.id;await load()}
 async function send(text,voice){text=text.trim();if(!text)return;await ensure();lastVoice=!!voice;bubble({role:"user",text});setBusy(true);liveEl().innerHTML='<span class="d">●</span> pracuję…';down();
  api("/api/chats/"+cur+"/say",{text,voice:!!voice})}
@@ -205,7 +215,7 @@ $("out").onclick=async()=>{await api("/api/logout",{}).catch(()=>{});location.re
 $("lf").onsubmit=async e=>{e.preventDefault();const r=await fetch("api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:$("pw").value,code:$("code").value})});
  if(r.ok){$("login").style.display="none";init()}else $("err").textContent=(await r.json()).error||"Błąd"};
 function chip(l,v,u,w,hot){return v==null?"":'<span class="chip'+(v>=hot?" hot":v>=w?" warm":"")+'">'+l+' <b>'+v+u+'</b></span>'}
-async function stats(){try{const s=await api("/api/stats");$("stats").innerHTML=chip("🌡",s.temp,"°C",70,85)+chip("CPU",s.cpu,"%",70,90)+chip("RAM",s.ram,"%",75,90)+chip("load",s.load,"",1e9,1e9)+(s.procs!=null?'<span class="chip">proc <b>'+s.procs+'</b></span>':"")}catch(_){}}
+async function stats(){try{const s=await api("/api/stats");$("stats").innerHTML=(s.tok!=null?'<span class="chip tk" title="Zużycie dziś">dziś <b>'+fmt(s.tok)+" tok</b></span>":"")+chip("🌡",s.temp,"°C",70,85)+chip("CPU",s.cpu,"%",70,90)+chip("RAM",s.ram,"%",75,90)+chip("load",s.load,"",1e9,1e9)+(s.procs!=null?'<span class="chip">proc <b>'+s.procs+'</b></span>':"")}catch(_){}}
 setInterval(stats,3000);
 
 /* ---- zarządzanie wtyczkami ---- */
@@ -228,8 +238,45 @@ async function prender(){const b=$("pbody");$("pq").hidden=ptab!=="cat";b.innerH
   d.forEach(m=>{const n=m.name||m.id||JSON.stringify(m);const r=document.createElement("div");r.className="pr";r.innerHTML='<div class="i"><b>'+esc(n)+"</b><small>"+esc(m.source||m.repo||m.url||"")+"</small></div>";
    const x=document.createElement("button");x.textContent="Usuń";x.onclick=()=>confirm("Usunąć źródło "+n+"?")&&pdo("api/marketplaces/do",{action:"remove",source:n},"Usuwam");r.append(x);b.append(r)})}}
 $("plg").onclick=()=>{$("side").classList.remove("open");$("pdlg").showModal();pmsg("");prender()};$("px").onclick=()=>$("pdlg").close();
-document.querySelectorAll(".tabs button").forEach(t=>t.onclick=()=>{document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("on"));t.classList.add("on");ptab=t.dataset.t;prender()});
+document.querySelectorAll("#pdlg .tabs button").forEach(t=>t.onclick=()=>{document.querySelectorAll("#pdlg .tabs button").forEach(x=>x.classList.remove("on"));t.classList.add("on");ptab=t.dataset.t;prender()});
 let pqt;$("pq").oninput=()=>{clearTimeout(pqt);pqt=setTimeout(prender,300)};
+
+/* ---- zużycie, dostawcy, limity, rozmowy ---- */
+let utab="use";const umsg=t=>$("umsg").textContent=t||"";
+async function udo(path,body,label){umsg((label||"Zapisuję")+"…");try{const r=await api(path,body);umsg(r.out!==undefined?(r.ok?"✓ ":"✗ ")+r.out:"✓ Zapisano")}catch(_){umsg("Błąd połączenia")}urender();refreshProv()}
+async function refreshProv(){try{const pv=await api("api/providers");const cur=$("prov").value;$("prov").innerHTML='<option value="auto">Auto (fallback)</option>'+pv.providers.filter(p=>p.enabled||p.id===cur).map(p=>'<option value="'+p.id+'">'+esc(p.label)+"</option>").join("");$("prov").value=cur||"auto"}catch(_){}}
+$("prov").onchange=()=>cur&&api("api/chats/"+cur+"/provider",{provider:$("prov").value}).then(()=>api("api/chats").then(c=>{chats=c;renderList()}));
+const hm=t=>new Date(t*1000).toLocaleTimeString("pl-PL",{hour:"2-digit",minute:"2-digit"});
+function pstat(p){return !p.enabled?["wyłączony",0]:!p.installed?["brak programu",0]:p.cooldown_until>Date.now()/1000?["limit do "+hm(p.cooldown_until),0]:p.over_budget?["budżet wyczerpany",0]:["gotowy",1]}
+async function urender(){const b=$("ubody");const el=document.activeElement;if(el&&b.contains(el)&&/INPUT|SELECT/.test(el.tagName)&&utab==="act")return;
+ if(utab==="use"){const [u,pv]=await Promise.all([api("api/usage"),api("api/providers")]);const lim=pv.budget.daily_tokens||0,pd=u.today.paid_tokens;
+  const mx=Math.max(1,...u.series.map(x=>x.tokens));
+  b.innerHTML='<div class="card"><div class="big">'+fmt(u.today.tokens)+' <small>tokenów dziś</small></div>'+(lim?'<div class="bar '+(pd>=lim*.9?"hot":"")+'"><i style="width:'+Math.min(100,pd/lim*100)+'%"></i></div><small>płatne: '+fmt(pd)+" / "+fmt(lim)+" (limit dzienny)</small>":'<small>Brak limitu dziennego. Ustaw go w zakładce Limity.</small>')+'<br><small>≈ $'+u.today.usd.toFixed(2)+' wartości API (przy subskrypcji to szacunek, nie rachunek). Lokalne AI nie liczy się do limitu.</small></div>'+
+   '<div class="card"><b>Dziś wg dostawcy</b><table class="t">'+(Object.keys(u.today.by_provider).map(k=>"<tr><td>"+PN[k]+"</td><td>"+fmt(u.today.by_provider[k].tokens)+" tok</td><td>"+u.today.by_provider[k].calls+" zapytań</td></tr>").join("")||'<tr><td class="mut">Brak zapytań dziś.</td></tr>')+'</table></div>'+
+   '<div class="card"><b>Ostatnie 14 dni</b><div class="bars">'+u.series.map((x,i)=>'<div class="'+(i===u.series.length-1?"today":"")+'" title="'+x.day+": "+fmt(x.tokens)+' tok" style="height:'+Math.max(2,x.tokens/mx*100)+'%"></div>').join("")+'</div></div>'+
+   '<div class="card"><b>Największe rozmowy (14 dni)</b><table class="t">'+(u.by_chat.map(r=>{const c=chats.find(x=>x.id===r.chat);return "<tr><td>"+esc(c?c.title:"(usunięta)")+"</td><td>"+fmt(r.tokens)+" tok</td></tr>"}).join("")||'<tr><td class="mut">Brak danych.</td></tr>')+"</table></div>"}
+ else if(utab==="prov"){const pv=await api("api/providers");b.innerHTML="";
+  const FIELDS={codex:[["model","Model"],["args","Argumenty CLI"]],ollama:[["url","Adres Ollama"],["model","Model (puste = pierwszy)"],["mac","MAC (Wake-on-LAN)"],["broadcast","Broadcast LAN"],["wake_timeout","Czas budzenia (s)"]],custom:[["label","Nazwa"],["cmd","Polecenie (np. opencode run)"]],claude:[]};
+  pv.providers.forEach(p=>{const [st,ok]=pstat(p);const d=document.createElement("div");d.className="card";
+   d.innerHTML='<div style="display:flex;gap:8px;align-items:center"><b style="flex:1">'+esc(p.label)+'</b><span class="tag '+(ok?"on":"")+'">'+st+'</span></div><small>dziś: '+fmt(p.today_tokens)+" tok"+(p.free?" · lokalny (bez limitu)":"")+"</small>"+
+    '<div class="f">'+(FIELDS[p.id]||[]).map(([k,l])=>"<label>"+l+'</label><input data-f="'+k+'" value="'+esc(Array.isArray(p[k])?p[k].join(" "):String(p[k]??""))+'">').join("")+(p.id==="custom"?'<label>Prompt przez stdin</label><input type="checkbox" data-f="stdin" '+(p.stdin?"checked":"")+' style="width:auto">':"")+"</div>";
+   const r=document.createElement("div");r.className="row2";
+   [[p.enabled?"Wyłącz":"Włącz",()=>udo("api/providers/save",{id:p.id,enabled:!p.enabled})],["Testuj",()=>udo("api/providers/test",{id:p.id},"Testuję")],...(FIELDS[p.id].length||p.id==="custom"?[["Zapisz",()=>{const o={id:p.id};d.querySelectorAll("[data-f]").forEach(i=>o[i.dataset.f]=i.type==="checkbox"?i.checked:i.value);udo("api/providers/save",o)},1]]:[])].forEach(([l,f,pri])=>{const x=document.createElement("button");x.textContent=l;if(pri)x.className="pri";x.onclick=f;r.append(x)});d.append(r);b.append(d)});
+  const ch=document.createElement("div");ch.className="card";ch.innerHTML="<b>Kolejność w trybie Auto</b><br><small>Gdy dostawca zgłosi limit, aplikacja przełącza na następnego (blokada 30 min). Lokalne AI zwykle na końcu.</small>";
+  pv.chain.forEach((id,i)=>{const r=document.createElement("div");r.className="pr";r.innerHTML='<div class="i"><b>'+(i+1)+". "+PN[id]+"</b></div>";
+   [["↑",-1],["↓",1]].forEach(([l,dl])=>{const x=document.createElement("button");x.textContent=l;x.disabled=(i+dl<0||i+dl>=pv.chain.length);x.onclick=()=>{const c=[...pv.chain];[c[i],c[i+dl]]=[c[i+dl],c[i]];udo("api/chain",{chain:c})};r.append(x)});ch.append(r)});
+  const rc=document.createElement("button");rc.textContent="Wyczyść blokady limitów";rc.style.marginTop="10px";rc.onclick=()=>udo("api/providers/reset-cooldown",{});ch.append(rc);b.append(ch)}
+ else if(utab==="lim"){const pv=await api("api/providers"),bd=pv.budget||{},pp=bd.per_provider||{};
+  b.innerHTML='<div class="card"><b>Limity dzienne</b><br><small>Dotyczą dostawców płatnych (Claude, Codex, własne CLI). Po przekroczeniu tryb Auto przełącza na lokalne AI. 0 = bez limitu.</small><div class="f"><label>Tokeny / dzień</label><input id="bt" type="number" min="0" value="'+(bd.daily_tokens||0)+'"><label>USD / dzień</label><input id="bu" type="number" min="0" step="0.5" value="'+(bd.daily_usd||0)+'">'+["claude","codex","custom"].map(k=>"<label>"+PN[k]+" tok/dz.</label><input data-p="+k+' type="number" min="0" value="'+(pp[k]||0)+'">').join("")+'</div><button class="pri" id="bs">Zapisz limity</button></div>';
+  $("bs").onclick=()=>{const per={};b.querySelectorAll("[data-p]").forEach(i=>per[i.dataset.p]=i.value);udo("api/budget",{daily_tokens:$("bt").value,daily_usd:$("bu").value,per_provider:per})}}
+ else{const cs=await api("api/chats");chats=cs;b.innerHTML='<div class="row2" style="margin:10px 0"><button class="bad" id="sa">Zatrzymaj wszystkie</button></div>';$("sa").onclick=()=>udo("api/stopall",{},"Zatrzymuję");
+  cs.forEach(c=>{const r=document.createElement("div");r.className="pr";r.innerHTML='<div class="i"><b>'+esc(c.title)+'</b><small>'+fmt(c.tokens)+" tok · "+(c.busy?"pracuje":"bezczynna")+"</small></div>";
+   const s=document.createElement("select");s.innerHTML=["auto","claude","codex","ollama","custom"].map(k=>'<option value="'+k+'">'+(k==="auto"?"Auto":PN[k])+"</option>").join("");s.value=c.provider||"auto";s.onchange=()=>api("api/chats/"+c.id+"/provider",{provider:s.value}).then(()=>load());r.append(s);
+   if(c.busy){const x=document.createElement("button");x.className="bad";x.textContent="Stop";x.onclick=()=>api("api/chats/"+c.id+"/stop",{}).then(urender);r.append(x)}
+   const o=document.createElement("button");o.textContent="Otwórz";o.onclick=()=>{$("udlg").close();open(c.id)};r.append(o);b.append(r)})}}
+$("usg").onclick=()=>{$("side").classList.remove("open");$("udlg").showModal();umsg("");urender()};$("ux").onclick=()=>$("udlg").close();
+document.querySelectorAll("#udlg .tabs button").forEach(t=>t.onclick=()=>{document.querySelectorAll("#udlg .tabs button").forEach(x=>x.classList.remove("on"));t.classList.add("on");utab=t.dataset.t;urender()});
+setInterval(()=>{if($("udlg").open&&utab==="act")urender()},3000);$("stats").onclick=e=>{if(e.target.closest(".tk"))$("usg").click()};
 fetch("api/auth").then(r=>r.json()).then(a=>{$("code").hidden=!a.totp;$("code").required=!!a.totp}).catch(()=>{});
-async function init(){stats();try{await api("/api/me");await load();sse()}catch(_){}}init();
+async function init(){stats();refreshProv();try{await api("/api/me");await load();sse()}catch(_){}}init();
 </script></html>

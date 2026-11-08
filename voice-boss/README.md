@@ -30,6 +30,26 @@ Wymagane: HTTPS (mikrofon w przeglądarce działa tylko na HTTPS), wyłączone b
 Ochrona: hasło (scrypt) + 2FA (TOTP), ciasteczko HttpOnly/SameSite/Secure, limit 5 prób/min, blokada żądań z obcych stron.
 Dodatkowo włącz Cloudflare Access przed `/studio` - to ostatnia linia obrony, bo kto się zaloguje, steruje Twoim komputerem.
 
+## Dostawcy AI, tokeny i limity
+Przycisk **Zużycie**: tokeny dziś i z 14 dni (wg dostawcy i rozmowy), limity dzienne (tokeny / USD / na dostawcę),
+dostawcy i kolejność, lista rozmów z przełączaniem dostawcy i STOP dla każdej (albo „Zatrzymaj wszystkie").
+Dostawca jest ustawiany per rozmowa (lista w nagłówku): **Auto**, Claude Code, Codex, lokalne AI (Ollama) lub własne CLI.
+- **Auto** idzie po kolejności z zakładki Dostawcy. Gdy dostawca zgłosi limit (np. „usage limit reached"), dostaje blokadę
+  na 30 min i zapytanie leci do następnego, z kontekstem rozmowy. Po przekroczeniu limitu dziennego płatni są pomijani,
+  a lokalne AI działa dalej (nie liczy się do limitu).
+- **Codex:** `npm i -g @openai/codex`, potem `codex login`. Wywołanie: `codex exec <argumenty> -` (prompt ze stdin); argumenty edytujesz w UI.
+- **Lokalne AI:** `ollama pull llama3.2`. Adres może być zdalny (np. przez Tailscale). Tryb tylko czat: bez narzędzi i plików.
+  Wpisz MAC komputera, a gdy Ollama nie odpowiada, aplikacja wyśle Wake-on-LAN i poczeka na start (działa, gdy serwer
+  jest w tej samej sieci LAN co budzony komputer; z VPS potrzebny jest przekaźnik w domu, np. router/Raspberry Pi).
+- **Własne CLI** (np. OpenCode/inne): „Własne CLI” → polecenie, np. `opencode run`; `{prompt}` w poleceniu zostanie podmienione,
+  inaczej prompt jest dopisany na końcu (lub idzie przez stdin).
+- Tokeny: Claude podaje dokładne wartości, Codex/własne CLI są szacowane (oznaczone „szac."). Kwota USD przy subskrypcji
+  to wartość API, nie rachunek.
+
+## Serwer 24/7 (Linux, systemd)
+`/etc/systemd/system/kadm-studio.service`: `ExecStart=/usr/bin/python3 /opt/design/voice-boss/server.py --cwd /srv/work --base /studio`,
+`Restart=always`, `User=kadm`. Potem `systemctl enable --now kadm-studio`. Na serwerze zaloguj `claude` i `codex` tym samym użytkownikiem.
+
 ## Wtyczki i MCP z poziomu aplikacji
 Przycisk **Wtyczki** w lewym panelu: zainstalowane (włącz/wyłącz/aktualizuj/usuń), katalog z wyszukiwarką (instalacja),
 serwery MCP (lista, dodawanie, usuwanie) i źródła (marketplace). Zmiany działają w nowych rozmowach.
